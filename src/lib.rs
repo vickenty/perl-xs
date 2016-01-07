@@ -8,3 +8,5 @@ pub mod raw {
     pub use perl_sys::funcs::*;
     pub use perl_sys::consts::*;
 }
+
+pub use context::Context;

@@ -2,6 +2,7 @@ use std;
 use std::os::raw::c_char;
 
 use raw::*;
+use pushable::Pushable;
 
 pub struct Context {
     pthx: PerlContext,
@@ -37,4 +38,8 @@ impl Context {
 
     simple_wrapper! { prepush, ouroboros_stack_prepush, }
     simple_wrapper! { putback, ouroboros_stack_putback, }
+
+    pub fn push<T>(&mut self, value: T) where T: Pushable {
+        value.push_extend(self.pthx, &mut self.stack);
+    }
 }

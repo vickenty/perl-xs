@@ -1,0 +1,4 @@
+[package]
+name = "perl-xs"
+version = "0.1.0"
+authors = ["Vickenty Fesunov <kent@setattr.net>"]

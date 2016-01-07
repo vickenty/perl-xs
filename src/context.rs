@@ -8,6 +8,14 @@ pub struct Context {
     stack: OuroborosStack,
 }
 
+macro_rules! simple_wrapper {
+    ($meth:ident, $func:ident, $( $arg:ident: $ty:ty ),*) => {
+        pub fn $meth(&mut self, $( $arg: $ty ),*) {
+            unsafe { $func(self.pthx, &mut self.stack, $( $arg ),*) }
+        }
+    }
+}
+
 impl Context {
     pub fn new(pthx: PerlContext) -> Context {
         unsafe {
@@ -26,4 +34,7 @@ impl Context {
             Perl_newXS(self.pthx, cname.as_ptr(), func, b"\0" as *const _ as *const c_char);
         }
     }
+
+    simple_wrapper! { prepush, ouroboros_stack_prepush, }
+    simple_wrapper! { putback, ouroboros_stack_putback, }
 }

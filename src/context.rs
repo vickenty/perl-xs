@@ -53,9 +53,6 @@ impl Context {
         value.push_unsafe(self.pthx, &mut self.stack);
     }
 
-    pub fn extend(&mut self, len: Size_t) {
-        unsafe {
-            ouroboros_stack_extend(self.pthx, &mut self.stack, len);
-        }
-    }
+    wrapper! { extend: ouroboros_stack_extend -stack (len: Size_t) }
+
 }

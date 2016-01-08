@@ -9,12 +9,18 @@ pub struct Context {
     stack: OuroborosStack,
 }
 
-macro_rules! simple_wrapper {
-    ($meth:ident, $func:ident, $( $arg:ident: $ty:ty ),*) => {
-        pub fn $meth(&mut self, $( $arg: $ty ),*) {
-            unsafe { $func(self.pthx, &mut self.stack, $( $arg ),*) }
-        }
-    }
+macro_rules! wrapper {
+    ($name:ident : $func:ident $( -$flag:ident )* ($( $arg:ident : $ty:ty ),*))
+        => (wrapper! { $name : $func $( -$flag )* ( $( $arg : $ty ),* ) -> () });
+
+    ($name:ident : $func:ident ($( $arg:ident : $ty:ty ),*) -> $rt:ty)
+        => (wrapper! { $name : $func ( $( $arg: $ty ),* ) self (self.pthx) -> $rt });
+
+    ($name:ident : $func:ident -stack ( $( $arg:ident: $ty:ty ),*) -> $rt:ty)
+        => (wrapper! { $name : $func ( $( $arg: $ty ),* ) self (self.pthx, &mut self.stack) -> $rt });
+
+    ($name:ident : $func:ident ( $( $arg:ident: $ty:ty ),* ) $slf:ident ( $( $def:expr ),* ) -> $rt:ty)
+        => (pub fn $name(&mut $slf, $( $arg: $ty ),*) -> $rt { unsafe { $func($( $def ),*, $( $arg ),*) } });
 }
 
 impl Context {
@@ -36,8 +42,8 @@ impl Context {
         }
     }
 
-    simple_wrapper! { prepush, ouroboros_stack_prepush, }
-    simple_wrapper! { putback, ouroboros_stack_putback, }
+    wrapper! { prepush: ouroboros_stack_prepush -stack () }
+    wrapper! { putback: ouroboros_stack_putback -stack () }
 
     pub fn push<T>(&mut self, value: T) where T: Pushable {
         value.push_extend(self.pthx, &mut self.stack);

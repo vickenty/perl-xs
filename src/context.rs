@@ -42,4 +42,14 @@ impl Context {
     pub fn push<T>(&mut self, value: T) where T: Pushable {
         value.push_extend(self.pthx, &mut self.stack);
     }
+
+    pub unsafe fn push_unsafe<T>(&mut self, value: T) where T: Pushable {
+        value.push_unsafe(self.pthx, &mut self.stack);
+    }
+
+    pub fn extend(&mut self, len: Size_t) {
+        unsafe {
+            ouroboros_stack_extend(self.pthx, &mut self.stack, len);
+        }
+    }
 }

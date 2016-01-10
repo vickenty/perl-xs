@@ -3,6 +3,8 @@ use std::os::raw::c_char;
 
 use raw::*;
 use pushable::Pushable;
+use scalar::{ Scalar };
+use handle;
 
 pub struct Context {
     pthx: PerlContext,
@@ -55,4 +57,19 @@ impl Context {
 
     wrapper! { extend: ouroboros_stack_extend -stack (len: Size_t) }
 
+    // Stack ops
+
+    pub unsafe fn st_fetch_raw(&mut self, idx: SSize_t) -> *mut SV {
+        ouroboros_stack_fetch(self.pthx, &mut self.stack, idx)
+    }
+
+    pub fn st_fetch<T>(&mut self, idx: SSize_t) -> T where T: From<handle::Transient<SV>> {
+        handle::Transient::new(self.pthx, unsafe { self.st_fetch_raw(idx) }).into()
+    }
+
+    // SV ops
+    pub fn sv_iv(&mut self, sv: handle::BareSV) -> IV {
+        println!("sv_iv");
+        handle::SV::from_bare(self.pthx, sv).to_iv()
+    }
 }

@@ -10,7 +10,7 @@ macro_rules! xs_return {
         $ctx.prepush();
         $ctx.extend(__perl_xs_len!( $( $val ),+ ));
         unsafe {
-            $( $ctx.push_unsafe($val); )*
+            $( $ctx.st_push_unsafe($val); )*
         }
         $ctx.putback();
         return;

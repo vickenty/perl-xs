@@ -47,11 +47,11 @@ impl Context {
     wrapper! { prepush: ouroboros_stack_prepush -stack () }
     wrapper! { putback: ouroboros_stack_putback -stack () }
 
-    pub fn push<T>(&mut self, value: T) where T: Pushable {
+    pub fn st_push<T>(&mut self, value: T) where T: Pushable {
         value.push_extend(self.pthx, &mut self.stack);
     }
 
-    pub unsafe fn push_unsafe<T>(&mut self, value: T) where T: Pushable {
+    pub unsafe fn st_push_unsafe<T>(&mut self, value: T) where T: Pushable {
         value.push_unsafe(self.pthx, &mut self.stack);
     }
 

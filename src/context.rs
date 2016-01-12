@@ -63,8 +63,8 @@ impl Context {
         ouroboros_stack_fetch(self.pthx, &mut self.stack, idx)
     }
 
-    pub fn st_fetch<T>(&mut self, idx: SSize_t) -> T where T: From<handle::Transient<SV>> {
-        handle::Transient::new(self.pthx, unsafe { self.st_fetch_raw(idx) }).into()
+    pub fn st_fetch<T>(&mut self, idx: SSize_t) -> T where T: From<handle::Temp<SV>> {
+        handle::Temp::new(self.pthx, unsafe { self.st_fetch_raw(idx) }).into()
     }
 
     // SV ops

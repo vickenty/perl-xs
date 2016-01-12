@@ -49,27 +49,27 @@ impl Scalar for Full<raw::SV> {
     fn get_raw_ptr(&self) -> *mut raw::SV { self.1 }
 }
 
-pub struct Transient<T: ?Sized>(PerlContext, *mut T);
+pub struct Temp<T: ?Sized>(PerlContext, *mut T);
 
-impl<T: ?Sized> Transient<T> {
-    pub fn new(pthx: PerlContext, raw: *mut T) -> Transient<T> {
-        Transient(pthx, raw)
+impl<T: ?Sized> Temp<T> {
+    pub fn new(pthx: PerlContext, raw: *mut T) -> Temp<T> {
+        Temp(pthx, raw)
     }
 }
 
-impl Scalar for Transient<raw::SV> {
+impl Scalar for Temp<raw::SV> {
     fn get_pthx(&self) -> PerlContext { self.0 }
     fn get_raw_ptr(&self) -> *mut raw::SV { self.1 }
 }
 
-impl From<Transient<raw::SV>> for raw::IV {
-    fn from(src: Transient<raw::SV>) -> raw::IV {
+impl From<Temp<raw::SV>> for raw::IV {
+    fn from(src: Temp<raw::SV>) -> raw::IV {
         src.to_iv()
     }
 }
 
-impl From<Transient<raw::SV>> for Full<raw::SV> {
-    fn from(src: Transient<raw::SV>) -> Full<raw::SV> {
+impl From<Temp<raw::SV>> for Full<raw::SV> {
+    fn from(src: Temp<raw::SV>) -> Full<raw::SV> {
         src.copy()
     }
 }

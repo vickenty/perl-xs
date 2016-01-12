@@ -18,4 +18,5 @@ pub use context::Context;
 pub use raw::{ IV, UV, NV };
 pub use handle::{ SV, AV, HV };
 pub use handle::{ BareSV, BareAV, BareHV };
+pub use handle::{ From };
 pub use scalar::{ Scalar };

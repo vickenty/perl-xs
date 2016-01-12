@@ -62,6 +62,12 @@ impl Scalar for Temp<raw::SV> {
     fn get_raw_ptr(&self) -> *mut raw::SV { self.1 }
 }
 
+/// Same as `std::convert::From`, except does not have `impl<T> From<T> for T`  which is not safe
+/// for Temp values. Bonus is that we can implement it for options of our types.
+pub trait From<T> {
+    fn from(T) -> Self;
+}
+
 impl From<Temp<raw::SV>> for raw::IV {
     fn from(src: Temp<raw::SV>) -> raw::IV {
         src.to_iv()
@@ -71,6 +77,12 @@ impl From<Temp<raw::SV>> for raw::IV {
 impl From<Temp<raw::SV>> for Full<raw::SV> {
     fn from(src: Temp<raw::SV>) -> Full<raw::SV> {
         src.copy()
+    }
+}
+
+impl<S, T> From<Option<S>> for Option<T> where T: From<S> {
+    fn from(src: Option<S>) -> Self {
+        src.map(|val| T::from(val))
     }
 }
 

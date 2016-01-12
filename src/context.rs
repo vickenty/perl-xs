@@ -5,6 +5,7 @@ use raw::*;
 use pushable::Pushable;
 use scalar::{ Scalar };
 use handle;
+use handle::From;
 
 pub struct Context {
     pthx: PerlContext,
@@ -64,7 +65,7 @@ impl Context {
     }
 
     pub fn st_fetch<T>(&mut self, idx: SSize_t) -> T where T: From<handle::Temp<SV>> {
-        handle::Temp::new(self.pthx, unsafe { self.st_fetch_raw(idx) }).into()
+        T::from(handle::Temp::new(self.pthx, unsafe { self.st_fetch_raw(idx) }))
     }
 
     // SV ops

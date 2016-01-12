@@ -1,9 +1,9 @@
 extern crate perl_sys;
 
-mod context;
-mod pushable;
-mod handle;
-mod scalar;
+pub mod context;
+pub mod pushable;
+pub mod handle;
+pub mod scalar;
 
 #[macro_use]
 mod macros;

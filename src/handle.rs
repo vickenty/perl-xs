@@ -1,6 +1,7 @@
 use raw;
 use raw::{ PerlContext };
 use scalar::Scalar;
+use array::Array;
 
 pub struct Bare<T: ?Sized> (*mut T);
 
@@ -27,6 +28,10 @@ impl<T: ?Sized> Full<T> {
         Full(pthx, raw)
     }
 
+    unsafe fn incref(&mut self) {
+        raw::ouroboros_sv_refcnt_inc_void_nn(self.0, self.1 as *mut raw::SV)
+    }
+
     pub fn from_bare(pthx: PerlContext, bare: Bare<T>) -> Self {
         unsafe { Self::new(pthx, bare.into_raw()) }
     }
@@ -47,6 +52,11 @@ impl<T: ?Sized> Drop for Full<T> {
 impl Scalar for Full<raw::SV> {
     fn get_pthx(&self) -> PerlContext { self.0 }
     fn get_raw_ptr(&self) -> *mut raw::SV { self.1 }
+}
+
+impl Array for Full<raw::AV> {
+    fn get_pthx(&self) -> PerlContext { self.0 }
+    fn get_raw_ptr(&self) -> *mut raw::AV { self.1 }
 }
 
 pub struct Temp<T: ?Sized>(PerlContext, *mut T);
@@ -77,6 +87,16 @@ impl From<Temp<raw::SV>> for raw::IV {
 impl From<Temp<raw::SV>> for Full<raw::SV> {
     fn from(src: Temp<raw::SV>) -> Full<raw::SV> {
         src.copy()
+    }
+}
+
+impl From<Temp<raw::AV>> for Full<raw::AV> {
+    fn from(src: Temp<raw::AV>) -> Full<raw::AV> {
+        unsafe {
+            let mut f = Full::new(src.0, src.1);
+            f.incref();
+            f
+        }
     }
 }
 

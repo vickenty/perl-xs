@@ -1,5 +1,6 @@
 use std;
 use std::os::raw::c_char;
+use std::ffi::CStr;
 
 use raw::*;
 use pushable::Pushable;
@@ -58,6 +59,10 @@ impl Context {
 
     wrapper! { extend: ouroboros_stack_extend -stack (len: Size_t) }
 
+    fn new_temp<T>(&mut self, ptr: *mut T) -> handle::Temp<T> {
+        handle::Temp::new(self.pthx, ptr)
+    }
+
     // Stack ops
 
     pub unsafe fn st_fetch_raw(&mut self, idx: SSize_t) -> *mut SV {
@@ -65,7 +70,17 @@ impl Context {
     }
 
     pub fn st_fetch<T>(&mut self, idx: SSize_t) -> T where T: From<handle::Temp<SV>> {
-        T::from(handle::Temp::new(self.pthx, unsafe { self.st_fetch_raw(idx) }))
+        let svp = unsafe { self.st_fetch_raw(idx) };
+        T::from(self.new_temp(svp))
+    }
+
+    // GV ops
+
+    pub fn get_av<T>(&mut self, name: &CStr) -> T where T: From<Option<handle::Temp<AV>>> {
+        let avp = unsafe { Perl_get_av(self.pthx, name.as_ptr(), 0) };
+        let opt = if avp.is_null() { None } else { Some(self.new_temp(avp)) };
+
+        T::from(opt)
     }
 
     // SV ops

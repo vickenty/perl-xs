@@ -85,7 +85,6 @@ impl Context {
 
     // SV ops
     pub fn sv_iv(&mut self, sv: handle::BareSV) -> IV {
-        println!("sv_iv");
         handle::SV::from_bare(self.pthx, sv).to_iv()
     }
 }

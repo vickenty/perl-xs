@@ -7,12 +7,12 @@ macro_rules! __perl_xs_len {
 #[macro_export]
 macro_rules! xs_return {
     ($ctx:ident, $( $val:expr ),*) => {{
-        $ctx.prepush();
-        $ctx.extend(__perl_xs_len!( $( $val ),+ ));
+        $ctx.st_prepush();
+        $ctx.st_extend(__perl_xs_len!( $( $val ),+ ));
         unsafe {
             $( $ctx.st_push_unsafe($val); )*
         }
-        $ctx.putback();
+        $ctx.st_putback();
         return;
     }}
 }

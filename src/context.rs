@@ -46,8 +46,11 @@ impl Context {
         }
     }
 
-    wrapper! { prepush: ouroboros_stack_prepush -stack () }
-    wrapper! { putback: ouroboros_stack_putback -stack () }
+    //
+
+    wrapper! { st_prepush: ouroboros_stack_prepush -stack () }
+    wrapper! { st_putback: ouroboros_stack_putback -stack () }
+    wrapper! { st_extend: ouroboros_stack_extend -stack (len: Size_t) }
 
     pub fn st_push<T>(&mut self, value: T) where T: Pushable {
         value.push_extend(self.pthx, &mut self.stack);
@@ -57,7 +60,7 @@ impl Context {
         value.push_unsafe(self.pthx, &mut self.stack);
     }
 
-    wrapper! { extend: ouroboros_stack_extend -stack (len: Size_t) }
+    //
 
     fn new_temp<T>(&mut self, ptr: *mut T) -> handle::Temp<T> {
         handle::Temp::new(self.pthx, ptr)

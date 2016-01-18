@@ -8,9 +8,10 @@ use scalar::{ Scalar };
 use handle;
 use handle::From;
 
-pub struct Context {
+pub struct Context<'a> {
     pthx: PerlContext,
     stack: OuroborosStack,
+    marker: std::marker::PhantomData<&'a PerlContext>
 }
 
 macro_rules! wrapper {
@@ -27,12 +28,13 @@ macro_rules! wrapper {
         => (pub fn $name(&mut $slf, $( $arg: $ty ),*) -> $rt { unsafe { $func($( $def ),*, $( $arg ),*) } });
 }
 
-impl Context {
-    pub fn new(pthx: PerlContext) -> Context {
+impl<'a> Context<'a> {
+    pub fn new(pthx: &'a PerlContext) -> Self {
         unsafe {
             let mut ctx = Context {
-                pthx: pthx,
+                pthx: *pthx,
                 stack: std::mem::uninitialized(),
+                marker: std::marker::PhantomData,
             };
             ouroboros_stack_init(ctx.pthx, &mut ctx.stack);
             ctx

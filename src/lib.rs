@@ -17,8 +17,18 @@ pub mod raw {
 
 pub use context::Context;
 pub use raw::{ IV, UV, NV };
-pub use handle::{ SV, AV, HV };
-pub use handle::{ BareSV, BareAV, BareHV };
-pub use handle::{ From };
-pub use scalar::{ Scalar };
-pub use array::{ Array };
+pub use scalar::Scalar;
+pub use array::Array;
+pub use handle::{ Full, Bare, Temp };
+
+pub type SV = Full<raw::SV>;
+pub type AV = Full<raw::AV>;
+pub type HV = Full<raw::HV>;
+
+pub type BareSV = Bare<raw::SV>;
+pub type BareAV = Bare<raw::AV>;
+pub type BareHV = Bare<raw::HV>;
+
+pub type TempSV = Temp<raw::SV>;
+pub type TempAV = Temp<raw::AV>;
+pub type TempHV = Temp<raw::HV>;

@@ -5,8 +5,7 @@ use std::ffi::CStr;
 use raw::*;
 use pushable::Pushable;
 use scalar::{ Scalar };
-use handle;
-use handle::From;
+use handle::{ Full, Bare, Temp, From };
 
 pub struct Context<'a> {
     pthx: PerlContext,
@@ -64,8 +63,8 @@ impl<'a> Context<'a> {
 
     //
 
-    fn new_temp<T>(&mut self, ptr: *mut T) -> handle::Temp<T> {
-        handle::Temp::new(self.pthx, ptr)
+    fn new_temp<T>(&mut self, ptr: *mut T) -> Temp<T> {
+        Temp::new(self.pthx, ptr)
     }
 
     // Stack ops
@@ -74,14 +73,14 @@ impl<'a> Context<'a> {
         ouroboros_stack_fetch(self.pthx, &mut self.stack, idx)
     }
 
-    pub fn st_fetch<T>(&mut self, idx: SSize_t) -> T where T: From<handle::Temp<SV>> {
+    pub fn st_fetch<T>(&mut self, idx: SSize_t) -> T where T: From<Temp<SV>> {
         let svp = unsafe { self.st_fetch_raw(idx) };
         T::from(self.new_temp(svp))
     }
 
     // GV ops
 
-    pub fn get_av<T>(&mut self, name: &CStr) -> T where T: From<Option<handle::Temp<AV>>> {
+    pub fn get_av<T>(&mut self, name: &CStr) -> T where T: From<Option<Temp<AV>>> {
         let avp = unsafe { Perl_get_av(self.pthx, name.as_ptr(), 0) };
         let opt = if avp.is_null() { None } else { Some(self.new_temp(avp)) };
 
@@ -89,7 +88,7 @@ impl<'a> Context<'a> {
     }
 
     // SV ops
-    pub fn sv_iv(&mut self, sv: handle::BareSV) -> IV {
-        handle::SV::from_bare(self.pthx, sv).to_iv()
+    pub fn sv_iv(&mut self, sv: Bare<SV>) -> IV {
+        Full::from_bare(self.pthx, sv).to_iv()
     }
 }

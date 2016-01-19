@@ -1,5 +1,5 @@
 use raw::*;
-use handle;
+use handle::{ Full };
 
 pub trait Scalar {
     fn get_pthx(&self) -> PerlContext;
@@ -13,10 +13,10 @@ pub trait Scalar {
         unsafe { ouroboros_sv_uv(self.get_pthx(), self.get_raw_ptr()) }
     }
     
-    fn copy(&self) -> handle::SV {
+    fn copy(&self) -> Full<SV> {
         unsafe { 
             let svp = Perl_newSVsv(self.get_pthx(), self.get_raw_ptr());
-            handle::SV::new(self.get_pthx(), svp)
+            Full::new(self.get_pthx(), svp)
         }
     }
 }

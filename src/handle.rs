@@ -1,5 +1,4 @@
-use raw;
-use raw::{ PerlContext };
+use raw::*;
 use scalar::Scalar;
 use array::Array;
 
@@ -29,7 +28,7 @@ impl<T: ?Sized> Full<T> {
     }
 
     unsafe fn incref(&mut self) {
-        raw::ouroboros_sv_refcnt_inc_void_nn(self.0, self.1 as *mut raw::SV)
+        ouroboros_sv_refcnt_inc_void_nn(self.0, self.1 as *mut SV)
     }
 
     pub fn from_bare(pthx: PerlContext, bare: Bare<T>) -> Self {
@@ -44,19 +43,19 @@ impl<T: ?Sized> Full<T> {
 impl<T: ?Sized> Drop for Full<T> {
     fn drop(&mut self) {
         unsafe {
-            raw::ouroboros_sv_refcnt_dec_nn(self.0, self.1 as *mut raw::SV);
+            ouroboros_sv_refcnt_dec_nn(self.0, self.1 as *mut SV);
         }
     }
 }
 
-impl Scalar for Full<raw::SV> {
+impl Scalar for Full<SV> {
     fn get_pthx(&self) -> PerlContext { self.0 }
-    fn get_raw_ptr(&self) -> *mut raw::SV { self.1 }
+    fn get_raw_ptr(&self) -> *mut SV { self.1 }
 }
 
-impl Array for Full<raw::AV> {
+impl Array for Full<AV> {
     fn get_pthx(&self) -> PerlContext { self.0 }
-    fn get_raw_ptr(&self) -> *mut raw::AV { self.1 }
+    fn get_raw_ptr(&self) -> *mut AV { self.1 }
 }
 
 pub struct Temp<T: ?Sized>(PerlContext, *mut T);
@@ -67,9 +66,9 @@ impl<T: ?Sized> Temp<T> {
     }
 }
 
-impl Scalar for Temp<raw::SV> {
+impl Scalar for Temp<SV> {
     fn get_pthx(&self) -> PerlContext { self.0 }
-    fn get_raw_ptr(&self) -> *mut raw::SV { self.1 }
+    fn get_raw_ptr(&self) -> *mut SV { self.1 }
 }
 
 /// Same as `std::convert::From`, except does not have `impl<T> From<T> for T`  which is not safe
@@ -78,20 +77,20 @@ pub trait From<T> {
     fn from(T) -> Self;
 }
 
-impl From<Temp<raw::SV>> for raw::IV {
-    fn from(src: Temp<raw::SV>) -> raw::IV {
+impl From<Temp<SV>> for IV {
+    fn from(src: Temp<SV>) -> IV {
         src.to_iv()
     }
 }
 
-impl From<Temp<raw::SV>> for Full<raw::SV> {
-    fn from(src: Temp<raw::SV>) -> Full<raw::SV> {
+impl From<Temp<SV>> for Full<SV> {
+    fn from(src: Temp<SV>) -> Full<SV> {
         src.copy()
     }
 }
 
-impl From<Temp<raw::AV>> for Full<raw::AV> {
-    fn from(src: Temp<raw::AV>) -> Full<raw::AV> {
+impl From<Temp<AV>> for Full<AV> {
+    fn from(src: Temp<AV>) -> Full<AV> {
         unsafe {
             let mut f = Full::new(src.0, src.1);
             f.incref();
@@ -105,12 +104,3 @@ impl<S, T> From<Option<S>> for Option<T> where T: From<S> {
         src.map(|val| T::from(val))
     }
 }
-
-pub type SV = Full<raw::SV>;
-pub type AV = Full<raw::AV>;
-pub type HV = Full<raw::HV>;
-
-pub type BareSV = Bare<raw::SV>;
-pub type BareAV = Bare<raw::AV>;
-pub type BareHV = Bare<raw::HV>;
-

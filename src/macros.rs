@@ -45,3 +45,8 @@ macro_rules! XS {
         }
     }
 }
+
+#[macro_export]
+macro_rules! cstr {
+    ($e:expr) => (&::std::ffi::CString::new($e).unwrap())
+}

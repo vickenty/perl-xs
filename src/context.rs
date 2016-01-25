@@ -78,6 +78,12 @@ impl<'a> Context<'a> {
         T::from(self.new_temp(svp))
     }
 
+    pub fn call_pv(&self, name: &CStr, flags: IV) -> I32 {
+        unsafe {
+            Perl_call_pv(self.pthx, name.as_ptr(), flags as I32)
+        }
+    }
+
     // GV ops
 
     pub fn get_av<T>(&mut self, name: &CStr) -> T where T: From<Option<Temp<AV>>> {

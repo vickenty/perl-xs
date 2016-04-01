@@ -9,13 +9,13 @@ pub trait Array {
         unsafe { Perl_av_fetch(self.get_pthx(), self.get_raw_ptr(), idx, 0) }
     }
 
-    fn fetch<T>(&self, idx: Size_t) -> T where T: From<Option<Temp<SV>>> {
+    fn fetch<T>(&self, idx: Size_t) -> Option<T> where T: From<Temp<SV>> {
         let svpp = self.fetch_raw(idx);
-        let temp = if svpp.is_null() {
+        if svpp.is_null() {
             None
         } else {
-            Some(Temp::new(self.get_pthx(), unsafe{ *svpp }))
-        };
-        T::from(temp)
+            let temp = Temp::new(self.get_pthx(), unsafe{ *svpp });
+            Some(T::from(temp))
+        }
     }
 }

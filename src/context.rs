@@ -86,11 +86,14 @@ impl<'a> Context<'a> {
 
     // GV ops
 
-    pub fn get_av<T>(&mut self, name: &CStr) -> T where T: From<Option<Temp<AV>>> {
+    pub fn get_av(&mut self, name: &CStr) -> Option<Full<AV>> {
         let avp = unsafe { Perl_get_av(self.pthx, name.as_ptr(), 0) };
-        let opt = if avp.is_null() { None } else { Some(self.new_temp(avp)) };
-
-        T::from(opt)
+        if avp.is_null() {
+            None
+        } else {
+            let full = unsafe { Full::new_incref(self.pthx, avp) };
+            Some(full)
+        }
     }
 
     // SV ops

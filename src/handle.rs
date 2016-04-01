@@ -27,6 +27,12 @@ impl<T: ?Sized> Full<T> {
         Full(pthx, raw)
     }
 
+    pub unsafe fn new_incref(pthx: PerlContext, raw: *mut T) -> Self {
+        let mut sv = Full::new(pthx, raw);
+        sv.incref();
+        sv
+    }
+
     unsafe fn incref(&mut self) {
         ouroboros_sv_refcnt_inc_void_nn(self.0, self.1 as *mut SV)
     }

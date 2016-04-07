@@ -1,21 +1,25 @@
-use raw::*;
-use handle::{ From, Temp };
+use handle::Owned;
+use raw;
+use raw::{ SSize_t };
+use convert::FromRaw;
 
-pub trait Array {
-    fn get_pthx(&self) -> PerlContext;
-    fn get_raw_ptr(&self) -> *mut AV;
+pub struct AV(Owned<raw::AV>);
 
-    fn fetch_raw(&self, idx: Size_t) -> *mut *mut SV {
-        unsafe { Perl_av_fetch(self.get_pthx(), self.get_raw_ptr(), idx, 0) }
+impl AV {
+    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
+        AV(Owned::from_raw_owned(pthx, raw))
+    }
+    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
+        AV(Owned::from_raw_borrowed(pthx, raw))
     }
 
-    fn fetch<T>(&self, idx: Size_t) -> Option<T> where T: From<Temp<SV>> {
-        let svpp = self.fetch_raw(idx);
+    pub fn fetch<T>(&self, key: SSize_t) -> Option<T> where T: FromRaw<raw::SV> {
+        let r = &*self.0;
+        let svpp = unsafe { r.pthx().av_fetch(r.as_ptr(), key) };
         if svpp.is_null() {
             None
         } else {
-            let temp = Temp::new(self.get_pthx(), unsafe{ *svpp });
-            Some(T::from(temp))
+            Some(unsafe { T::from_raw(r.pthx(), *svpp) })
         }
     }
 }

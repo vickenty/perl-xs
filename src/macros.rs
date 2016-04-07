@@ -1,17 +1,8 @@
 #[macro_export]
-macro_rules! __perl_xs_len {
-    ( $x:expr ) => ( 1 );
-    ( $x:expr, $( $xs:expr ),+ ) => ( 1 + __perl_xs_len!($( $xs ),+) );
-}
-
-#[macro_export]
 macro_rules! xs_return {
     ($ctx:ident, $( $val:expr ),*) => {{
         $ctx.st_prepush();
-        $ctx.st_extend(__perl_xs_len!( $( $val ),+ ));
-        unsafe {
-            $( $ctx.st_push_unsafe($val); )*
-        }
+        $( $ctx.st_push($val); )*
         $ctx.st_putback();
         return;
     }}
@@ -25,7 +16,7 @@ macro_rules! XS {
     } => {
         $(
             #[allow(non_snake_case)]
-            pub extern "C" fn $name (pthx: $crate::raw::PerlContext,
+            pub extern "C" fn $name (pthx: $crate::raw::PerlThreadContext,
                                      _cv: *mut $crate::raw::CV) {
                 let mut $ctx = $crate::Context::new(&pthx);
                 $body
@@ -34,10 +25,10 @@ macro_rules! XS {
 
         #[no_mangle]
         #[allow(non_snake_case)]
-        pub extern "C" fn $boot (pthx: $crate::raw::PerlContext, _cv: *mut $crate::raw::CV) {
+        pub extern "C" fn $boot (pthx: $crate::raw::PerlThreadContext, _cv: *mut $crate::raw::CV) {
             let mut ctx = $crate::Context::new(&pthx);
             $({
-                let fullname = concat!(stringify!($pkg), "::", stringify!($name));
+                let fullname = cstr!(concat!(stringify!($pkg), "::", stringify!($name)));
                 ctx.new_xs(&fullname, $name);
             })*
 

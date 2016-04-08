@@ -1,6 +1,6 @@
 use std;
 use raw;
-use { AV };
+use { IV, AV };
 use convert::{ FromRaw, IntoSV };
 use std::ffi::CStr;
 
@@ -64,5 +64,9 @@ impl<'a> Context<'a> {
         } else {
             Some(unsafe { AV::from_raw_borrowed(self.pthx, avp) })
         }
+    }
+
+    pub fn call_pv(&mut self, name: &CStr, flags: IV) {
+        unsafe { self.pthx.call_pv(name.as_ptr(), flags as raw::I32) };
     }
 }

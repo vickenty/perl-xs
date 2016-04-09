@@ -1,5 +1,6 @@
 //! Minimal wrapper around internal Perl API.
 
+use std::ptr;
 use std::mem;
 use std::os::raw::{ c_int };
 use perl_sys::funcs::*;
@@ -35,7 +36,7 @@ macro_rules! xcpt_try {
     ( $se:ident, $( $body:stmt )* ) => {{
         let mut v = mem::uninitialized();
         {
-            let mut callback: &mut FnMut() = &mut || v = { $( $body )* };
+            let mut callback: &mut FnMut() = &mut || ptr::write(&mut v, { $( $body )* });
             let rc = ouroboros_xcpt_try($se.0,
                                         mem::transmute(xcpt_bouncer as extern "C" fn(_)),
                                         mem::transmute(&mut callback));

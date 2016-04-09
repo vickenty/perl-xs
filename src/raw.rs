@@ -28,13 +28,13 @@ struct Xcpt(c_int);
 // be fine, since closure is FnMut and has no destructors.
 //
 // If it returns zero, we assume that closure did not die and `v` was assigned to, making it safe to
-// return, otherwise we panic and possibly uninitialized `v` is not revealed.
+// return, otherwise we panic and possibly incorrect value of `v` is not revealed.
 //
 // This only works with POD return types and non-panicing $body, which should always be the case for
 // Perl API.
 macro_rules! xcpt_try {
     ( $se:ident, $( $body:stmt )* ) => {{
-        let mut v = mem::uninitialized();
+        let mut v = mem::zeroed();
         {
             let mut callback: &mut FnMut() = &mut || ptr::write(&mut v, { $( $body )* });
             let rc = ouroboros_xcpt_try($se.0,

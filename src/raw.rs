@@ -93,9 +93,20 @@ perl_api! {
     pub unsafe fn sv_refcnt_inc(&self, sv: *mut SV) { ouroboros_sv_refcnt_inc_void_nn(self.0, sv) }
     pub unsafe fn sv_refcnt_dec(&self, sv: *mut SV) { ouroboros_sv_refcnt_dec_nn(self.0, sv) }
 
-    pub unsafe fn av_fetch(&self, av: *mut AV, key: SSize_t) -> *mut *mut SV { Perl_av_fetch(self.0, av, key, 0) }
-    pub unsafe fn av_fetch_lvalue(&self, av: *mut AV, key: SSize_t) -> *mut *mut SV { Perl_av_fetch(self.0, av, key, 1) }
+    pub unsafe fn av_clear(&self, av: *mut AV) { Perl_av_clear(self.0, av) }
+    pub unsafe fn av_delete(&self, av: *mut AV, key: SSize_t, flags: I32) -> *mut SV { Perl_av_delete(self.0, av, key, flags) }
+    pub unsafe fn av_exists(&self, av: *mut AV, key: SSize_t) -> c_bool { Perl_av_exists(self.0, av, key) }
+    pub unsafe fn av_extend(&self, av: *mut AV, key: SSize_t) { Perl_av_extend(self.0, av, key) }
+    pub unsafe fn av_fetch(&self, av: *mut AV, key: SSize_t, flags: I32) -> *mut *mut SV { Perl_av_fetch(self.0, av, key, flags) }
+    pub unsafe fn av_fill(&self, av: *mut AV, fill: SSize_t) { Perl_av_fill(self.0, av, fill) }
+    pub unsafe fn av_len(&self, av: *mut AV) -> SSize_t { Perl_av_len(self.0, av) }
+    pub unsafe fn av_make(&self, size: SSize_t, strp: *mut *mut SV) -> *mut AV { Perl_av_make(self.0, size, strp) }
+    pub unsafe fn av_pop(&self, av: *mut AV) -> *mut SV { Perl_av_pop(self.0, av) }
+    pub unsafe fn av_push(&self, av: *mut AV, val: *mut SV) { Perl_av_push(self.0, av, val) }
+    pub unsafe fn av_shift(&self, av: *mut AV) -> *mut SV { Perl_av_shift(self.0, av) }
     pub unsafe fn av_store(&self, av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV { Perl_av_store(self.0, av, key, sv) }
+    pub unsafe fn av_undef(&self, av: *mut AV) { Perl_av_undef(self.0, av) }
+    pub unsafe fn av_unshift(&self, av: *mut AV, num: SSize_t) { Perl_av_unshift(self.0, av, num) }
 
     pub unsafe fn st_init(&self, stack: &mut Stack) { ouroboros_stack_init(self.0, stack) }
     pub unsafe fn st_prepush(&self, stack: &mut Stack) { ouroboros_stack_prepush(self.0, stack) }

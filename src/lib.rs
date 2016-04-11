@@ -2,6 +2,8 @@ extern crate perl_sys;
 
 #[macro_use]
 mod macros;
+#[macro_use]
+mod helper_macros;
 
 pub mod raw;
 mod handle;

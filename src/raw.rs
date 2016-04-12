@@ -2,7 +2,7 @@
 
 use std::ptr;
 use std::mem;
-use std::os::raw::{ c_int };
+use std::os::raw::{ c_int, c_char };
 use perl_sys::funcs::*;
 
 pub use perl_sys::types::*;
@@ -70,12 +70,50 @@ macro_rules! method {
 }
 
 impl Interpreter {
-    method! { fn sv_iv(sv: *mut SV) -> IV = ouroboros_sv_iv }
-    method! { fn sv_uv(sv: *mut SV) -> UV = ouroboros_sv_uv }
-    method! { fn sv_nv(sv: *mut SV) -> NV = ouroboros_sv_nv }
-
-    method! { fn sv_refcnt_inc(sv: *mut SV) = ouroboros_sv_refcnt_inc_void_nn }
-    method! { fn sv_refcnt_dec(sv: *mut SV) = ouroboros_sv_refcnt_dec_nn }
+    method! { fn stack_init(arg0: *mut Stack) = ouroboros_stack_init }
+    method! { fn stack_items(arg0: *mut Stack) -> c_int = ouroboros_stack_items }
+    method! { fn stack_prepush(arg0: *mut Stack) = ouroboros_stack_prepush }
+    method! { fn stack_putback(arg0: *mut Stack) = ouroboros_stack_putback }
+    method! { fn stack_fetch(arg0: *mut Stack, arg1: SSize_t) -> *mut SV = ouroboros_stack_fetch }
+    method! { fn stack_store(arg0: *mut Stack, arg1: SSize_t, arg2: *mut SV) = ouroboros_stack_store }
+    method! { fn stack_extend(arg0: *mut Stack, arg1: SSize_t) = ouroboros_stack_extend }
+    method! { fn stack_pushmark(arg0: *mut Stack) = ouroboros_stack_pushmark }
+    method! { fn stack_spagain(arg0: *mut Stack) = ouroboros_stack_spagain }
+    method! { fn stack_xpush_sv(arg0: *mut Stack, arg1: *mut SV) = ouroboros_stack_xpush_sv }
+    method! { fn stack_xpush_sv_mortal(arg0: *mut Stack, arg1: *mut SV) = ouroboros_stack_xpush_sv_mortal }
+    method! { fn stack_xpush_iv(arg0: *mut Stack, arg1: IV) = ouroboros_stack_xpush_iv }
+    method! { fn stack_xpush_uv(arg0: *mut Stack, arg1: UV) = ouroboros_stack_xpush_uv }
+    method! { fn stack_xpush_nv(arg0: *mut Stack, arg1: NV) = ouroboros_stack_xpush_nv }
+    method! { fn stack_xpush_pv(arg0: *mut Stack, arg1: *const c_char, arg2: STRLEN) = ouroboros_stack_xpush_pv }
+    method! { fn stack_push_sv(arg0: *mut Stack, arg1: *mut SV) = ouroboros_stack_push_sv }
+    method! { fn stack_push_sv_mortal(arg0: *mut Stack, arg1: *mut SV) = ouroboros_stack_push_sv_mortal }
+    method! { fn stack_push_iv(arg0: *mut Stack, arg1: IV) = ouroboros_stack_push_iv }
+    method! { fn stack_push_uv(arg0: *mut Stack, arg1: UV) = ouroboros_stack_push_uv }
+    method! { fn stack_push_nv(arg0: *mut Stack, arg1: NV) = ouroboros_stack_push_nv }
+    method! { fn stack_push_pv(arg0: *mut Stack, arg1: *const c_char, arg2: STRLEN) = ouroboros_stack_push_pv }
+    method! { fn sv_iv(arg0: *mut SV) -> IV = ouroboros_sv_iv }
+    method! { fn sv_uv(arg0: *mut SV) -> UV = ouroboros_sv_uv }
+    method! { fn sv_nv(arg0: *mut SV) -> NV = ouroboros_sv_nv }
+    method! { fn sv_pv(arg0: *mut SV, arg1: *mut STRLEN) -> *const c_char = ouroboros_sv_pv }
+    method! { fn sv_pv_nolen(arg0: *mut SV) -> *const c_char = ouroboros_sv_pv_nolen }
+    method! { fn sv_rok(arg0: *mut SV) -> U32 = ouroboros_sv_rok }
+    method! { fn sv_rv(arg0: *mut SV) -> *mut SV = ouroboros_sv_rv }
+    method! { fn sv_type(arg0: *mut SV) -> IV = ouroboros_sv_type }
+    method! { fn gv_sv(arg0: *mut GV) -> *mut SV = ouroboros_gv_sv }
+    method! { fn gv_av(arg0: *mut GV) -> *mut AV = ouroboros_gv_av }
+    method! { fn gv_hv(arg0: *mut GV) -> *mut HV = ouroboros_gv_hv }
+    method! { fn gv_cv(arg0: *mut CV) -> *mut CV = ouroboros_gv_cv }
+    method! { fn sv_refcnt(arg0: *mut SV) -> U32 = ouroboros_sv_refcnt }
+    method! { fn sv_refcnt_inc(arg0: *mut SV) -> *mut SV = ouroboros_sv_refcnt_inc }
+    method! { fn sv_refcnt_inc_nn(arg0: *mut SV) -> *mut SV = ouroboros_sv_refcnt_inc_nn }
+    method! { fn sv_refcnt_inc_void(arg0: *mut SV) = ouroboros_sv_refcnt_inc_void }
+    method! { fn sv_refcnt_inc_void_nn(arg0: *mut SV) = ouroboros_sv_refcnt_inc_void_nn }
+    method! { fn sv_refcnt_dec(arg0: *mut SV) = ouroboros_sv_refcnt_dec }
+    method! { fn sv_refcnt_dec_nn(arg0: *mut SV) = ouroboros_sv_refcnt_dec_nn }
+    method! { fn enter() = ouroboros_enter }
+    method! { fn leave() = ouroboros_leave }
+    method! { fn savetmps() = ouroboros_savetmps }
+    method! { fn freetmps() = ouroboros_freetmps }
 
     method! { fn av_clear(av: *mut AV) = Perl_av_clear }
     method! { fn av_delete(av: *mut AV, key: SSize_t, flags: I32) -> *mut SV = Perl_av_delete }
@@ -91,17 +129,6 @@ impl Interpreter {
     method! { fn av_store(av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV = Perl_av_store }
     method! { fn av_undef(av: *mut AV) = Perl_av_undef }
     method! { fn av_unshift(av: *mut AV, num: SSize_t) = Perl_av_unshift }
-
-    method! { fn st_init(stack: &mut Stack) = ouroboros_stack_init }
-    method! { fn st_prepush(stack: &mut Stack) = ouroboros_stack_prepush }
-    method! { fn st_putback(stack: &mut Stack) = ouroboros_stack_putback }
-    method! { fn st_extend(stack: &mut Stack, len: Size_t) = ouroboros_stack_extend }
-
-    method! { fn st_fetch(stack: &mut Stack, idx: SSize_t) -> *mut SV = ouroboros_stack_fetch }
-    method! { fn st_push(stack: &mut Stack, val: *mut SV) = ouroboros_stack_push_sv }
-    method! { fn st_push_iv(stack: &mut Stack, val: IV) = ouroboros_stack_push_iv }
-    method! { fn st_push_uv(stack: &mut Stack, val: UV) = ouroboros_stack_push_uv }
-    method! { fn st_push_nv(stack: &mut Stack, val: NV) = ouroboros_stack_push_nv }
 
     method! { fn call_pv(name: *const i8, flags: I32) -> I32 = Perl_call_pv }
 

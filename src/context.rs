@@ -19,7 +19,7 @@ impl<'a> Context<'a> {
                 marker: std::marker::PhantomData,
             };
 
-            ctx.pthx.st_init(&mut ctx.stack);
+            ctx.pthx.stack_init(&mut ctx.stack);
 
             ctx
         }
@@ -28,24 +28,24 @@ impl<'a> Context<'a> {
     // STACK
 
     pub fn st_prepush(&mut self) {
-        unsafe { self.pthx.st_prepush(&mut self.stack) };
+        unsafe { self.pthx.stack_prepush(&mut self.stack) };
     }
 
     pub fn st_putback(&mut self) {
-        unsafe { self.pthx.st_putback(&mut self.stack) };
+        unsafe { self.pthx.stack_putback(&mut self.stack) };
     }
 
     pub fn st_fetch<T>(&mut self, idx: isize) -> T where
         T: FromRaw<raw::SV>
     {
         /* FIXME: panic if idx > items */
-        let svp = unsafe { self.pthx.st_fetch(&mut self.stack, idx as raw::SSize_t) };
+        let svp = unsafe { self.pthx.stack_fetch(&mut self.stack, idx as raw::SSize_t) };
         unsafe { T::from_raw(self.pthx, svp) }
     }
 
     pub fn st_push<T>(&mut self, val: T) where T: IntoSV {
         let sv = val.into_sv(self.pthx);
-        unsafe { self.pthx.st_push(&mut self.stack, sv.into_raw()) };
+        unsafe { self.pthx.stack_push_sv(&mut self.stack, sv.into_raw()) };
     }
 
     // XSUB

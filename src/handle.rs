@@ -22,11 +22,11 @@ impl<T: HasRefCnt> Ref<T> {
     pub fn as_ptr(&self) -> *mut T { self.1 }
 
     pub fn incref(&self) {
-        unsafe { self.0.sv_refcnt_inc(self.1 as *mut SV) }
+        unsafe { self.0.sv_refcnt_inc_void_nn(self.1 as *mut SV) }
     }
 
     pub fn decref(&self) {
-        unsafe { self.0.sv_refcnt_dec(self.1 as *mut SV) }
+        unsafe { self.0.sv_refcnt_dec_nn(self.1 as *mut SV) }
     }
 
     pub fn to_owned(&self) -> Owned<T> {

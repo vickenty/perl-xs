@@ -58,7 +58,7 @@ impl<'a> Context<'a> {
     // GLOBALS
 
     pub fn get_av(&mut self, name: &CStr) -> Option<AV> {
-        let avp = unsafe { self.pthx.get_av(name.as_ptr()) };
+        let avp = unsafe { self.pthx.get_av(name.as_ptr(), 0) };
         if avp.is_null() {
             None
         } else {

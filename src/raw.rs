@@ -33,11 +33,11 @@ struct Xcpt(c_int);
 // This only works with POD return types and non-panicing $body, which should always be the case for
 // Perl API.
 macro_rules! xcpt_try {
-    ( $se:ident, $( $body:stmt )* ) => {{
+    ( $pthx:expr, $( $body:stmt )* ) => {{
         let mut v = mem::zeroed();
         {
             let mut callback: &mut FnMut() = &mut || ptr::write(&mut v, { $( $body )* });
-            let rc = ouroboros_xcpt_try($se.0,
+            let rc = ouroboros_xcpt_try($pthx,
                                         mem::transmute(xcpt_bouncer as extern "C" fn(_)),
                                         mem::transmute(&mut callback));
             if rc != 0 {
@@ -55,25 +55,21 @@ extern "C" fn xcpt_bouncer(closure: &mut &mut FnMut()) {
 
 macro_rules! perl_api_inner {
     (
-        pub unsafe fn $name:ident ( & $se:ident, $( $pname:ident : $ptype:ty ),* ) {
-            $( $body:stmt )*
-        }
+        fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) = $imp:ident;
         $( $rest:tt )*
     ) => (
         perl_api_inner! {
-            pub unsafe fn $name ( & $se, $( $pname : $ptype ),* ) -> () { $( $body )* }
+            fn $name ( $( $pname : $ptype ),* ) -> () = $imp;
             $( $rest )*
         }
     );
 
     (
-        pub unsafe fn $name:ident ( & $se:ident, $( $pname:ident : $ptype:ty ),* ) -> $rtype:ty {
-            $( $body:stmt )*
-        }
+        fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) -> $rtype:ty = $imp:ident;
         $( $rest:tt )*
     ) => (
-        pub unsafe fn $name ( & $se, $( $pname : $ptype ),* ) -> $rtype {
-            xcpt_try! { $se, $( $body )* }
+        pub unsafe fn $name ( &self, $( $pname : $ptype ),* ) -> $rtype {
+            xcpt_try! { self.0, $imp( self.0, $( $pname ),* ) }
         }
         perl_api_inner! { $( $rest )* }
     );
@@ -86,49 +82,47 @@ macro_rules! perl_api {
 }
 
 perl_api! {
-    pub unsafe fn sv_iv(&self, sv: *mut SV) -> IV { ouroboros_sv_iv(self.0, sv) }
-    pub unsafe fn sv_uv(&self, sv: *mut SV) -> UV { ouroboros_sv_uv(self.0, sv) }
-    pub unsafe fn sv_nv(&self, sv: *mut SV) -> NV { ouroboros_sv_nv(self.0, sv) }
+    fn sv_iv(sv: *mut SV) -> IV = ouroboros_sv_iv;
+    fn sv_uv(sv: *mut SV) -> UV = ouroboros_sv_uv;
+    fn sv_nv(sv: *mut SV) -> NV = ouroboros_sv_nv;
 
-    pub unsafe fn sv_refcnt_inc(&self, sv: *mut SV) { ouroboros_sv_refcnt_inc_void_nn(self.0, sv) }
-    pub unsafe fn sv_refcnt_dec(&self, sv: *mut SV) { ouroboros_sv_refcnt_dec_nn(self.0, sv) }
+    fn sv_refcnt_inc(sv: *mut SV) = ouroboros_sv_refcnt_inc_void_nn;
+    fn sv_refcnt_dec(sv: *mut SV) = ouroboros_sv_refcnt_dec_nn;
 
-    pub unsafe fn av_clear(&self, av: *mut AV) { Perl_av_clear(self.0, av) }
-    pub unsafe fn av_delete(&self, av: *mut AV, key: SSize_t, flags: I32) -> *mut SV { Perl_av_delete(self.0, av, key, flags) }
-    pub unsafe fn av_exists(&self, av: *mut AV, key: SSize_t) -> c_bool { Perl_av_exists(self.0, av, key) }
-    pub unsafe fn av_extend(&self, av: *mut AV, key: SSize_t) { Perl_av_extend(self.0, av, key) }
-    pub unsafe fn av_fetch(&self, av: *mut AV, key: SSize_t, flags: I32) -> *mut *mut SV { Perl_av_fetch(self.0, av, key, flags) }
-    pub unsafe fn av_fill(&self, av: *mut AV, fill: SSize_t) { Perl_av_fill(self.0, av, fill) }
-    pub unsafe fn av_len(&self, av: *mut AV) -> SSize_t { Perl_av_len(self.0, av) }
-    pub unsafe fn av_make(&self, size: SSize_t, strp: *mut *mut SV) -> *mut AV { Perl_av_make(self.0, size, strp) }
-    pub unsafe fn av_pop(&self, av: *mut AV) -> *mut SV { Perl_av_pop(self.0, av) }
-    pub unsafe fn av_push(&self, av: *mut AV, val: *mut SV) { Perl_av_push(self.0, av, val) }
-    pub unsafe fn av_shift(&self, av: *mut AV) -> *mut SV { Perl_av_shift(self.0, av) }
-    pub unsafe fn av_store(&self, av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV { Perl_av_store(self.0, av, key, sv) }
-    pub unsafe fn av_undef(&self, av: *mut AV) { Perl_av_undef(self.0, av) }
-    pub unsafe fn av_unshift(&self, av: *mut AV, num: SSize_t) { Perl_av_unshift(self.0, av, num) }
+    fn av_clear(av: *mut AV) = Perl_av_clear;
+    fn av_delete(av: *mut AV, key: SSize_t, flags: I32) -> *mut SV = Perl_av_delete;
+    fn av_exists(av: *mut AV, key: SSize_t) -> c_bool = Perl_av_exists;
+    fn av_extend(av: *mut AV, key: SSize_t) = Perl_av_extend;
+    fn av_fetch(av: *mut AV, key: SSize_t, flags: I32) -> *mut *mut SV = Perl_av_fetch;
+    fn av_fill(av: *mut AV, fill: SSize_t) = Perl_av_fill;
+    fn av_len(av: *mut AV) -> SSize_t = Perl_av_len;
+    fn av_make(size: SSize_t, strp: *mut *mut SV) -> *mut AV = Perl_av_make;
+    fn av_pop(av: *mut AV) -> *mut SV = Perl_av_pop;
+    fn av_push(av: *mut AV, val: *mut SV) = Perl_av_push;
+    fn av_shift(av: *mut AV) -> *mut SV = Perl_av_shift;
+    fn av_store(av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV = Perl_av_store;
+    fn av_undef(av: *mut AV) = Perl_av_undef;
+    fn av_unshift(av: *mut AV, num: SSize_t) = Perl_av_unshift;
 
-    pub unsafe fn st_init(&self, stack: &mut Stack) { ouroboros_stack_init(self.0, stack) }
-    pub unsafe fn st_prepush(&self, stack: &mut Stack) { ouroboros_stack_prepush(self.0, stack) }
-    pub unsafe fn st_putback(&self, stack: &mut Stack) { ouroboros_stack_putback(self.0, stack) }
-    pub unsafe fn st_extend(&self, stack: &mut Stack, len: Size_t) { ouroboros_stack_extend(self.0, stack, len) }
+    fn st_init(stack: &mut Stack) = ouroboros_stack_init;
+    fn st_prepush(stack: &mut Stack) = ouroboros_stack_prepush;
+    fn st_putback(stack: &mut Stack) = ouroboros_stack_putback;
+    fn st_extend(stack: &mut Stack, len: Size_t) = ouroboros_stack_extend;
 
-    pub unsafe fn st_fetch(&self, stack: &mut Stack, idx: SSize_t) -> *mut SV { ouroboros_stack_fetch(self.0, stack, idx) }
-    pub unsafe fn st_push(&self, stack: &mut Stack, val: *mut SV) { ouroboros_stack_push_sv(self.0, stack, val) }
-    pub unsafe fn st_push_iv(&self, stack: &mut Stack, val: IV) { ouroboros_stack_push_iv(self.0, stack, val) }
-    pub unsafe fn st_push_uv(&self, stack: &mut Stack, val: UV) { ouroboros_stack_push_uv(self.0, stack, val) }
-    pub unsafe fn st_push_nv(&self, stack: &mut Stack, val: NV) { ouroboros_stack_push_nv(self.0, stack, val) }
+    fn st_fetch(stack: &mut Stack, idx: SSize_t) -> *mut SV = ouroboros_stack_fetch;
+    fn st_push(stack: &mut Stack, val: *mut SV) = ouroboros_stack_push_sv;
+    fn st_push_iv(stack: &mut Stack, val: IV) = ouroboros_stack_push_iv;
+    fn st_push_uv(stack: &mut Stack, val: UV) = ouroboros_stack_push_uv;
+    fn st_push_nv(stack: &mut Stack, val: NV) = ouroboros_stack_push_nv;
 
-    pub unsafe fn call_pv(&self, name: *const i8, flags: I32) -> I32 { Perl_call_pv(self.0, name, flags) }
+    fn call_pv(name: *const i8, flags: I32) -> I32 = Perl_call_pv;
 
-    pub unsafe fn new_xs(&self, name: *const i8, func: XSUBADDR_t, file: *const i8) -> *mut CV {
-        Perl_newXS(self.0, name, func, file)
-    }
-    pub unsafe fn new_sv(&self, len: STRLEN) -> *mut SV { Perl_newSV(self.0, len) }
-    pub unsafe fn new_sv_iv(&self, val: IV) -> *mut SV { Perl_newSViv(self.0, val) }
-    pub unsafe fn new_sv_uv(&self, val: UV) -> *mut SV { Perl_newSVuv(self.0, val) }
-    pub unsafe fn new_sv_nv(&self, val: NV) -> *mut SV { Perl_newSVnv(self.0, val) }
-    pub unsafe fn new_sv_pvn(&self, val: *const i8, len: STRLEN, flags: U32) -> *mut SV { Perl_newSVpvn_flags(self.0, val, len, flags) }
+    fn new_xs(name: *const i8, func: XSUBADDR_t, file: *const i8) -> *mut CV = Perl_newXS;
+    fn new_sv(len: STRLEN) -> *mut SV = Perl_newSV;
+    fn new_sv_iv(val: IV) -> *mut SV = Perl_newSViv;
+    fn new_sv_uv(val: UV) -> *mut SV = Perl_newSVuv;
+    fn new_sv_nv(val: NV) -> *mut SV = Perl_newSVnv;
+    fn new_sv_pvn(val: *const i8, len: STRLEN, flags: U32) -> *mut SV = Perl_newSVpvn_flags;
 
-    pub unsafe fn get_av(&self, name: *const i8) -> *mut AV { Perl_get_av(self.0, name, 0) }
+    fn get_av(name: *const i8, flags: I32) -> *mut AV = Perl_get_av;
 }

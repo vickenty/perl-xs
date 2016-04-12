@@ -45,7 +45,7 @@ impl<'a> Context<'a> {
 
     pub fn st_push<T>(&mut self, val: T) where T: IntoSV {
         let sv = val.into_sv(self.pthx);
-        unsafe { self.pthx.stack_push_sv(&mut self.stack, sv.into_raw()) };
+        unsafe { self.pthx.stack_xpush_sv_mortal(&mut self.stack, sv.into_raw()) };
     }
 
     // XSUB

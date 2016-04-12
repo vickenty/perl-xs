@@ -53,76 +53,64 @@ extern "C" fn xcpt_bouncer(closure: &mut &mut FnMut()) {
     (*closure)();
 }
 
-macro_rules! perl_api_inner {
+macro_rules! method {
     (
-        fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) = $imp:ident;
-        $( $rest:tt )*
+        fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) = $imp:ident
     ) => (
-        perl_api_inner! {
-            fn $name ( $( $pname : $ptype ),* ) -> () = $imp;
-            $( $rest )*
-        }
+        method! { fn $name ( $( $pname : $ptype ),* ) -> () = $imp }
     );
 
     (
-        fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) -> $rtype:ty = $imp:ident;
-        $( $rest:tt )*
+        fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) -> $rtype:ty = $imp:ident
     ) => (
         pub unsafe fn $name ( &self, $( $pname : $ptype ),* ) -> $rtype {
             xcpt_try! { self.0, $imp( self.0, $( $pname ),* ) }
         }
-        perl_api_inner! { $( $rest )* }
     );
-
-    () => ();
 }
 
-macro_rules! perl_api {
-    ( $( $tt:tt )* ) => ( impl Interpreter { perl_api_inner! { $( $tt )* } } )
-}
+impl Interpreter {
+    method! { fn sv_iv(sv: *mut SV) -> IV = ouroboros_sv_iv }
+    method! { fn sv_uv(sv: *mut SV) -> UV = ouroboros_sv_uv }
+    method! { fn sv_nv(sv: *mut SV) -> NV = ouroboros_sv_nv }
 
-perl_api! {
-    fn sv_iv(sv: *mut SV) -> IV = ouroboros_sv_iv;
-    fn sv_uv(sv: *mut SV) -> UV = ouroboros_sv_uv;
-    fn sv_nv(sv: *mut SV) -> NV = ouroboros_sv_nv;
+    method! { fn sv_refcnt_inc(sv: *mut SV) = ouroboros_sv_refcnt_inc_void_nn }
+    method! { fn sv_refcnt_dec(sv: *mut SV) = ouroboros_sv_refcnt_dec_nn }
 
-    fn sv_refcnt_inc(sv: *mut SV) = ouroboros_sv_refcnt_inc_void_nn;
-    fn sv_refcnt_dec(sv: *mut SV) = ouroboros_sv_refcnt_dec_nn;
+    method! { fn av_clear(av: *mut AV) = Perl_av_clear }
+    method! { fn av_delete(av: *mut AV, key: SSize_t, flags: I32) -> *mut SV = Perl_av_delete }
+    method! { fn av_exists(av: *mut AV, key: SSize_t) -> c_bool = Perl_av_exists }
+    method! { fn av_extend(av: *mut AV, key: SSize_t) = Perl_av_extend }
+    method! { fn av_fetch(av: *mut AV, key: SSize_t, flags: I32) -> *mut *mut SV = Perl_av_fetch }
+    method! { fn av_fill(av: *mut AV, fill: SSize_t) = Perl_av_fill }
+    method! { fn av_len(av: *mut AV) -> SSize_t = Perl_av_len }
+    method! { fn av_make(size: SSize_t, strp: *mut *mut SV) -> *mut AV = Perl_av_make }
+    method! { fn av_pop(av: *mut AV) -> *mut SV = Perl_av_pop }
+    method! { fn av_push(av: *mut AV, val: *mut SV) = Perl_av_push }
+    method! { fn av_shift(av: *mut AV) -> *mut SV = Perl_av_shift }
+    method! { fn av_store(av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV = Perl_av_store }
+    method! { fn av_undef(av: *mut AV) = Perl_av_undef }
+    method! { fn av_unshift(av: *mut AV, num: SSize_t) = Perl_av_unshift }
 
-    fn av_clear(av: *mut AV) = Perl_av_clear;
-    fn av_delete(av: *mut AV, key: SSize_t, flags: I32) -> *mut SV = Perl_av_delete;
-    fn av_exists(av: *mut AV, key: SSize_t) -> c_bool = Perl_av_exists;
-    fn av_extend(av: *mut AV, key: SSize_t) = Perl_av_extend;
-    fn av_fetch(av: *mut AV, key: SSize_t, flags: I32) -> *mut *mut SV = Perl_av_fetch;
-    fn av_fill(av: *mut AV, fill: SSize_t) = Perl_av_fill;
-    fn av_len(av: *mut AV) -> SSize_t = Perl_av_len;
-    fn av_make(size: SSize_t, strp: *mut *mut SV) -> *mut AV = Perl_av_make;
-    fn av_pop(av: *mut AV) -> *mut SV = Perl_av_pop;
-    fn av_push(av: *mut AV, val: *mut SV) = Perl_av_push;
-    fn av_shift(av: *mut AV) -> *mut SV = Perl_av_shift;
-    fn av_store(av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV = Perl_av_store;
-    fn av_undef(av: *mut AV) = Perl_av_undef;
-    fn av_unshift(av: *mut AV, num: SSize_t) = Perl_av_unshift;
+    method! { fn st_init(stack: &mut Stack) = ouroboros_stack_init }
+    method! { fn st_prepush(stack: &mut Stack) = ouroboros_stack_prepush }
+    method! { fn st_putback(stack: &mut Stack) = ouroboros_stack_putback }
+    method! { fn st_extend(stack: &mut Stack, len: Size_t) = ouroboros_stack_extend }
 
-    fn st_init(stack: &mut Stack) = ouroboros_stack_init;
-    fn st_prepush(stack: &mut Stack) = ouroboros_stack_prepush;
-    fn st_putback(stack: &mut Stack) = ouroboros_stack_putback;
-    fn st_extend(stack: &mut Stack, len: Size_t) = ouroboros_stack_extend;
+    method! { fn st_fetch(stack: &mut Stack, idx: SSize_t) -> *mut SV = ouroboros_stack_fetch }
+    method! { fn st_push(stack: &mut Stack, val: *mut SV) = ouroboros_stack_push_sv }
+    method! { fn st_push_iv(stack: &mut Stack, val: IV) = ouroboros_stack_push_iv }
+    method! { fn st_push_uv(stack: &mut Stack, val: UV) = ouroboros_stack_push_uv }
+    method! { fn st_push_nv(stack: &mut Stack, val: NV) = ouroboros_stack_push_nv }
 
-    fn st_fetch(stack: &mut Stack, idx: SSize_t) -> *mut SV = ouroboros_stack_fetch;
-    fn st_push(stack: &mut Stack, val: *mut SV) = ouroboros_stack_push_sv;
-    fn st_push_iv(stack: &mut Stack, val: IV) = ouroboros_stack_push_iv;
-    fn st_push_uv(stack: &mut Stack, val: UV) = ouroboros_stack_push_uv;
-    fn st_push_nv(stack: &mut Stack, val: NV) = ouroboros_stack_push_nv;
+    method! { fn call_pv(name: *const i8, flags: I32) -> I32 = Perl_call_pv }
 
-    fn call_pv(name: *const i8, flags: I32) -> I32 = Perl_call_pv;
+    method! { fn new_xs(name: *const i8, func: XSUBADDR_t, file: *const i8) -> *mut CV = Perl_newXS }
+    method! { fn new_sv(len: STRLEN) -> *mut SV = Perl_newSV }
+    method! { fn new_sv_iv(val: IV) -> *mut SV = Perl_newSViv }
+    method! { fn new_sv_uv(val: UV) -> *mut SV = Perl_newSVuv }
+    method! { fn new_sv_nv(val: NV) -> *mut SV = Perl_newSVnv }
+    method! { fn new_sv_pvn(val: *const i8, len: STRLEN, flags: U32) -> *mut SV = Perl_newSVpvn_flags }
 
-    fn new_xs(name: *const i8, func: XSUBADDR_t, file: *const i8) -> *mut CV = Perl_newXS;
-    fn new_sv(len: STRLEN) -> *mut SV = Perl_newSV;
-    fn new_sv_iv(val: IV) -> *mut SV = Perl_newSViv;
-    fn new_sv_uv(val: UV) -> *mut SV = Perl_newSVuv;
-    fn new_sv_nv(val: NV) -> *mut SV = Perl_newSVnv;
-    fn new_sv_pvn(val: *const i8, len: STRLEN, flags: U32) -> *mut SV = Perl_newSVpvn_flags;
-
-    fn get_av(name: *const i8, flags: I32) -> *mut AV = Perl_get_av;
+    method! { fn get_av(name: *const i8, flags: I32) -> *mut AV = Perl_get_av }
 }

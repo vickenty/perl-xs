@@ -52,19 +52,19 @@ impl FromRaw<raw::SV> for SV {
 
 impl IntoSV for IV {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe { SV::from_raw(pthx, pthx.new_sv_iv(self)) }
+        unsafe { SV::from_raw_owned(pthx, pthx.new_sv_iv(self)) }
     }
 }
 
 impl IntoSV for UV {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe { SV::from_raw(pthx, pthx.new_sv_uv(self)) }
+        unsafe { SV::from_raw_owned(pthx, pthx.new_sv_uv(self)) }
     }
 }
 
 impl IntoSV for NV {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe { SV::from_raw(pthx, pthx.new_sv_nv(self)) }
+        unsafe { SV::from_raw_owned(pthx, pthx.new_sv_nv(self)) }
     }
 }
 

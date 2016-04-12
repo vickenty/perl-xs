@@ -114,6 +114,12 @@ impl Interpreter {
     method! { fn leave() = ouroboros_leave }
     method! { fn savetmps() = ouroboros_savetmps }
     method! { fn freetmps() = ouroboros_freetmps }
+    method! { fn he_hash(arg0: *mut HE) -> U32 = ouroboros_he_hash }
+    method! { fn he_pv(arg0: *mut HE, arg1: *mut STRLEN) -> *const c_char = ouroboros_he_pv }
+    method! { fn he_svkey(arg0: *mut HE) -> *mut SV = ouroboros_he_svkey }
+    method! { fn he_svkey_force(arg0: *mut HE) -> *mut SV = ouroboros_he_svkey_force }
+    method! { fn he_svkey_set(arg0: *mut HE, arg1: *mut SV) -> *mut SV = ouroboros_he_svkey_set }
+    method! { fn he_val(arg0: *mut HE) -> *mut SV = ouroboros_he_val }
 
     method! { fn av_clear(av: *mut AV) = Perl_av_clear }
     method! { fn av_delete(av: *mut AV, key: SSize_t, flags: I32) -> *mut SV = Perl_av_delete }
@@ -129,6 +135,20 @@ impl Interpreter {
     method! { fn av_store(av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV = Perl_av_store }
     method! { fn av_undef(av: *mut AV) = Perl_av_undef }
     method! { fn av_unshift(av: *mut AV, num: SSize_t) = Perl_av_unshift }
+
+    method! { fn hv_fetch(hv: *mut HV, key: *const c_char, klen: I32, lval: I32) -> *mut *mut SV = Perl_hv_fetch }
+    method! { fn hv_fetch_ent(hv: *mut HV, keysv: *mut SV, lval: I32, hash: U32) -> *mut HE = Perl_hv_fetch_ent }
+    method! { fn hv_fill(hv: *mut HV) -> STRLEN = Perl_hv_fill }
+    method! { fn hv_iterinit(hv: *mut HV) -> I32 = Perl_hv_iterinit }
+    method! { fn hv_iterkey(entry: *mut HE, retlen: *mut I32) -> *mut c_char = Perl_hv_iterkey }
+    method! { fn hv_iterkeysv(entry: *mut HE) -> *mut SV = Perl_hv_iterkeysv }
+    method! { fn hv_iternext(hv: *mut HV) -> *mut HE = Perl_hv_iternext }
+    method! { fn hv_iternextsv(hv: *mut HV, key: *mut *mut c_char, retlen: *mut I32) -> *mut SV = Perl_hv_iternextsv }
+    method! { fn hv_iterval(hv: *mut HV, entry: *mut HE) -> *mut SV = Perl_hv_iterval }
+    method! { fn hv_magic(hv: *mut HV, gv: *mut GV, how: c_int) = Perl_hv_magic }
+    method! { fn hv_scalar(hv: *mut HV) -> *mut SV = Perl_hv_scalar }
+    method! { fn hv_store(hv: *mut HV, key: *const c_char, klen: I32, val: *mut SV, hash: U32) -> *mut *mut SV = Perl_hv_store }
+    method! { fn hv_store_ent(hv: *mut HV, key: *mut SV, val: *mut SV, hash: U32) -> *mut HE = Perl_hv_store_ent }
 
     method! { fn call_pv(name: *const i8, flags: I32) -> I32 = Perl_call_pv }
 

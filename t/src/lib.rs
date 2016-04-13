@@ -14,6 +14,16 @@ XS! {
             ctx.st_push("Don't panic!");
             ctx.st_putback();
         }
+
+        sub test_push_unicode(ctx)  {
+            ctx.st_prepush();
+            ctx.st_push("Don't panic!");
+            ctx.st_push("Не паникуйте!");
+            ctx.st_push("慌てる必要がありません");
+            ctx.st_push("☺");
+            ctx.st_push("a\u{035c}\u{0361}");
+            ctx.st_putback();
+        }
     }
     loader boot_XSTest;
 }

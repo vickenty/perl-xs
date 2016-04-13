@@ -8,20 +8,9 @@ use convert::{ IntoSV, FromRaw };
 pub struct SV(Owned<raw::SV>);
 
 impl SV {
-    pub fn iv(&self) -> IV {
-        let r = &*self.0;
-        unsafe { r.pthx().sv_iv(r.as_ptr()) }
-    }
-
-    pub fn uv(&self) -> UV {
-        let r = &*self.0;
-        unsafe { r.pthx().sv_uv(r.as_ptr()) }
-    }
-
-    pub fn nv(&self) -> NV {
-        let r = &*self.0;
-        unsafe { r.pthx().sv_nv(r.as_ptr()) }
-    }
+    method! { simple fn iv() -> IV = sv_iv() }
+    method! { simple fn uv() -> UV = sv_uv() }
+    method! { simple fn nv() -> NV = sv_nv() }
 
     pub fn into_raw(self) -> *mut raw::SV {
         let raw = self.0.as_ptr();
@@ -36,10 +25,14 @@ impl SV {
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV(Owned::from_raw_borrowed(pthx, raw))
     }
+
+    fn pthx(&self) -> raw::Interpreter { self.0.pthx() }
+
+    fn as_ptr(&self) -> *mut raw::SV { self.0.as_ptr() }
 }
 
-impl FromRaw<raw::SV> for IV {
-    unsafe fn from_raw(pthx: raw::Interpreter, raw: *mut raw::SV) -> IV {
+impl FromSV for IV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> IV {
         pthx.sv_iv(raw)
     }
 }

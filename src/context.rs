@@ -1,7 +1,7 @@
 use std;
 use raw;
 use { IV, AV };
-use convert::{ FromRaw, IntoSV };
+use convert::{ FromSV, IntoSV };
 use std::ffi::CStr;
 
 pub struct Context<'a> {
@@ -35,12 +35,11 @@ impl<'a> Context<'a> {
         unsafe { self.pthx.stack_putback(&mut self.stack) };
     }
 
-    pub fn st_fetch<T>(&mut self, idx: isize) -> T where
-        T: FromRaw<raw::SV>
+    pub fn st_fetch<T>(&mut self, idx: isize) -> T where T: FromSV
     {
         /* FIXME: panic if idx > items */
         let svp = unsafe { self.pthx.stack_fetch(&mut self.stack, idx as raw::SSize_t) };
-        unsafe { T::from_raw(self.pthx, svp) }
+        unsafe { T::from_sv(self.pthx, svp) }
     }
 
     pub fn st_push<T>(&mut self, val: T) where T: IntoSV {

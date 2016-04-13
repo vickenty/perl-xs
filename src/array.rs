@@ -1,7 +1,6 @@
 use handle::Owned;
 use raw;
 use raw::{ SSize_t };
-use convert::FromRaw;
 use SV;
 
 pub struct AV(Owned<raw::AV>);

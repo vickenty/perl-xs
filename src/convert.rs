@@ -1,8 +1,8 @@
 use raw;
 use SV;
 
-pub trait FromRaw<T: ?Sized> {
-    unsafe fn from_raw(pthx: raw::Interpreter, raw: *mut T) -> Self;
+pub trait FromSV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Self;
 }
 
 pub trait IntoSV {

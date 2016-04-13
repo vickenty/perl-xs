@@ -3,7 +3,7 @@ use std::mem;
 use handle::Owned;
 use raw;
 use raw::{ IV, UV, NV };
-use convert::{ IntoSV, FromRaw };
+use convert::{ IntoSV, FromSV };
 
 pub struct SV(Owned<raw::SV>);
 
@@ -37,8 +37,8 @@ impl FromSV for IV {
     }
 }
 
-impl FromRaw<raw::SV> for SV {
-    unsafe fn from_raw(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
+impl FromSV for SV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV::from_raw_borrowed(pthx, raw)
     }
 }

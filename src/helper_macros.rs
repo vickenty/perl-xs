@@ -14,16 +14,16 @@ macro_rules! method {
     );
 
     (getter fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) = $imp:ident ( $( $args:expr ),* ) ) => (
-        pub fn $name<T>(&self, $( $pname : $ptype ),* ) -> Option<T> where T: FromRaw<raw::SV> {
+        pub fn $name<T>(&self, $( $pname : $ptype ),* ) -> Option<T> where T: $crate::convert::FromSV {
             let svp = unsafe { self.pthx().$imp(self.as_ptr(), $( $args ),*) };
-            if !svp.is_null() { Some(unsafe { T::from_raw(self.pthx(), svp) }) } else { None }
+            if !svp.is_null() { Some(unsafe { T::from_sv(self.pthx(), svp) }) } else { None }
         }
     );
 
     (getptr fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) = $imp:ident ( $( $args:expr ),* ) ) => (
-        pub fn $name<T>(&self, $( $pname : $ptype ),* ) -> Option<T> where T: FromRaw<raw::SV> {
+        pub fn $name<T>(&self, $( $pname : $ptype ),* ) -> Option<T> where T: $crate::convert::FromSV {
             let svpp = unsafe { self.pthx().$imp(self.as_ptr(), $( $args ),*) };
-            if !svpp.is_null() { Some(unsafe { T::from_raw(self.pthx(), *svpp) }) } else { None }
+            if !svpp.is_null() { Some(unsafe { T::from_sv(self.pthx(), *svpp) }) } else { None }
         }
     );
 }

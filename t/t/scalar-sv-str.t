@@ -16,10 +16,10 @@ use constant {
 
 require_ok("XSTest");
 
-is_deeply [ XSTest::test_unicode(ASCII) ], [ ASCII, UTF_OK ], "ascii ok";
-is_deeply [ XSTest::test_unicode(KANJI) ], [ KANJI, UTF_OK ], "kanji ok";
-is_deeply [ XSTest::test_unicode(DIACR) ], [ DIACR, UTF_OK ], "diacritics ok";
+is_deeply [ XSTest::test_unicode(ASCII) ], [ ASCII, 0+utf8::is_utf8(ASCII), UTF_OK ], "ascii ok";
+is_deeply [ XSTest::test_unicode(KANJI) ], [ KANJI, 0+utf8::is_utf8(KANJI), UTF_OK ], "kanji ok";
+is_deeply [ XSTest::test_unicode(DIACR) ], [ DIACR, 0+utf8::is_utf8(DIACR), UTF_OK ], "diacritics ok";
 
-is_deeply [ XSTest::test_unicode(NONUTF) ], [ "", NONUTF_OFFSET ], "binary not ok";
+is_deeply [ XSTest::test_unicode(NONUTF) ], [ "", 0+utf8::is_utf8(NONUTF), NONUTF_OFFSET ], "binary not ok";
 
 done_testing;

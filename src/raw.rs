@@ -110,6 +110,10 @@ impl Interpreter {
     method! { fn sv_refcnt_inc_void_nn(arg0: *mut SV) = ouroboros_sv_refcnt_inc_void_nn }
     method! { fn sv_refcnt_dec(arg0: *mut SV) = ouroboros_sv_refcnt_dec }
     method! { fn sv_refcnt_dec_nn(arg0: *mut SV) = ouroboros_sv_refcnt_dec_nn }
+    method! { fn sv_flags(arg0: *mut SV) -> UV = ouroboros_sv_flags }
+    method! { fn sv_utf8(arg0: *mut SV) -> c_bool = ouroboros_sv_utf8 }
+    method! { fn sv_utf8_on(arg0: *mut SV) = ouroboros_sv_utf8_on }
+    method! { fn sv_utf8_off(arg0: *mut SV) = ouroboros_sv_utf8_off }
     method! { fn enter() = ouroboros_enter }
     method! { fn leave() = ouroboros_leave }
     method! { fn savetmps() = ouroboros_savetmps }

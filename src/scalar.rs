@@ -10,6 +10,7 @@ impl SV {
     method! { simple fn iv() -> IV = sv_iv() }
     method! { simple fn uv() -> UV = sv_uv() }
     method! { simple fn nv() -> NV = sv_nv() }
+    method! { simple fn utf8() -> bool = sv_utf8() != 0 }
 
     pub fn pv(&self) -> &[u8] {
         unsafe {

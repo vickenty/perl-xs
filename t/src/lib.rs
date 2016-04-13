@@ -11,6 +11,7 @@ XS! {
             ctx.st_push(-1 as IV);
             ctx.st_push(42 as UV);
             ctx.st_push((42.0 as NV).powf(0.5));
+            ctx.st_push("Don't panic!");
             ctx.st_putback();
         }
     }

@@ -1,4 +1,4 @@
-use std::{ mem, slice, str };
+use std::{ mem, slice, string };
 use handle::Owned;
 use raw;
 use raw::{ IV, UV, NV };
@@ -12,16 +12,16 @@ impl SV {
     method! { simple fn nv() -> NV = sv_nv() }
     method! { simple fn utf8() -> bool = sv_utf8() != 0 }
 
-    pub fn pv(&self) -> &[u8] {
+    pub fn pv(&self) -> Vec<u8> {
         unsafe {
             let mut len = 0;
             let ptr = self.pthx().sv_pv(self.as_ptr(), &mut len);
-            slice::from_raw_parts(ptr as *const u8, len as usize)
+            slice::from_raw_parts(ptr as *const u8, len as usize).to_owned()
         }
     }
 
-    pub fn str(&self) -> Result<&str, str::Utf8Error> {
-        str::from_utf8(self.pv())
+    pub fn str(&self) -> Result<String, string::FromUtf8Error> {
+        String::from_utf8(self.pv())
     }
 
     pub fn into_raw(self) -> *mut raw::SV {

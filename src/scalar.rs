@@ -67,7 +67,7 @@ impl<'a> IntoSV for &'a str {
         let buf = CString::new(self).unwrap();
         unsafe {
             let svp = pthx.new_sv_pvn(buf.as_ptr(), self.len() as raw::STRLEN, raw::SVf_UTF8 as raw::U32);
-            SV::from_raw(pthx, svp)
+            SV::from_raw_owned(pthx, svp)
         }
     }
 }

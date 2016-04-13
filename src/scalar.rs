@@ -1,5 +1,4 @@
-use std::mem;
-
+use std::{ mem, slice, str };
 use handle::Owned;
 use raw;
 use raw::{ IV, UV, NV };
@@ -11,6 +10,18 @@ impl SV {
     method! { simple fn iv() -> IV = sv_iv() }
     method! { simple fn uv() -> UV = sv_uv() }
     method! { simple fn nv() -> NV = sv_nv() }
+
+    pub fn pv(&self) -> &[u8] {
+        unsafe {
+            let mut len = 0;
+            let ptr = self.pthx().sv_pv(self.as_ptr(), &mut len);
+            slice::from_raw_parts(ptr as *const u8, len as usize)
+        }
+    }
+
+    pub fn str(&self) -> Result<&str, str::Utf8Error> {
+        str::from_utf8(self.pv())
+    }
 
     pub fn into_raw(self) -> *mut raw::SV {
         let raw = self.0.as_ptr();

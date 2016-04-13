@@ -24,6 +24,15 @@ XS! {
             ctx.st_push("a\u{035c}\u{0361}");
             ctx.st_putback();
         }
+
+        sub test_unicode(ctx) {
+            let sv: SV = ctx.st_fetch(0);
+
+            match sv.str() {
+                Ok(s) => xs_return!(ctx, s, -1 as IV),
+                Err(e) => xs_return!(ctx, "", e.valid_up_to() as IV),
+            }
+        }
     }
     loader boot_XSTest;
 }

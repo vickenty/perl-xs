@@ -63,10 +63,10 @@ impl IntoSV for NV {
 
 impl<'a> IntoSV for &'a str {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        use std::ffi::CString;
-        let buf = CString::new(self).unwrap();
         unsafe {
-            let svp = pthx.new_sv_pvn(buf.as_ptr(), self.len() as raw::STRLEN, raw::SVf_UTF8 as raw::U32);
+            let svp = pthx.new_sv_pvn(self.as_ptr() as *const i8,
+                                      self.len() as raw::STRLEN,
+                                      raw::SVf_UTF8 as raw::U32);
             SV::from_raw_owned(pthx, svp)
         }
     }

@@ -6,18 +6,6 @@ use SV;
 pub struct AV(Owned<raw::AV>);
 
 impl AV {
-    /// Construct new `AV` from a raw pointer without incrementing reference counter (raw pointer
-    /// already "owns" one incref).
-    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
-        AV(Owned::from_raw_owned(pthx, raw))
-    }
-
-    /// Construct new `AV` from a raw pointer and increment its reference counter (raw pointer is
-    /// "borrowed" from another structure that owns one incref).
-    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
-        AV(Owned::from_raw_borrowed(pthx, raw))
-    }
-
     fn pthx(&self) -> raw::Interpreter { self.0.pthx() }
 
     fn as_ptr(&self) -> *mut raw::AV { self.0.as_ptr() }
@@ -115,5 +103,17 @@ impl AV {
             let svpp = self.pthx().av_store(self.as_ptr(), key, val.into_raw());
             if !svpp.is_null() { self.pthx().sv_refcnt_dec(*svpp) }
         }
+    }
+
+    /// Construct new AV from a raw pointer without incrementing reference counter (raw pointer
+    /// already "owns" one incref).
+    pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
+        AV(Owned::from_raw_owned(pthx, raw))
+    }
+
+    /// Construct new AV from a raw pointer and increment its reference counter (raw pointer is
+    /// "borrowed" from another structure that owns one incref).
+    pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
+        AV(Owned::from_raw_borrowed(pthx, raw))
     }
 }

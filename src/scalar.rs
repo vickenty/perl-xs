@@ -7,11 +7,37 @@ use convert::{ IntoSV, FromSV };
 pub struct SV(Owned<raw::SV>);
 
 impl SV {
-    method! { simple fn iv() -> IV = sv_iv() }
-    method! { simple fn uv() -> UV = sv_uv() }
-    method! { simple fn nv() -> NV = sv_nv() }
-    method! { simple fn utf8() -> bool = sv_utf8() != 0 }
+    method! {
+        /// Coerce the given SV to an integer and return it.
+        ///
+        /// Perl macro: [`SvIV`](http://perldoc.perl.org/perlapi.html#SvIV).
+        simple fn iv() -> IV = sv_iv()
+    }
+    method! {
+        /// Coerce the given SV to an unsigned integer and return it.
+        ///
+        /// Perl macro: [`SvUV`](http://perldoc.perl.org/perlapi.html#SvUV).
+        simple fn uv() -> UV = sv_uv()
+    }
+    method! {
+        /// Coerce the given SV to a floating point value and return it.
+        ///
+        /// Perl macro: [`SvNV`](http://perldoc.perl.org/perlapi.html#SvNV).
+        simple fn nv() -> NV = sv_nv()
+    }
+    method! {
+        /// Return UTF8 flag on the SV.
+        ///
+        /// You should use this after a call to `pv()` or `str()`, in case any call to string
+        /// overloading updates the internal flag.
+        ///
+        /// Perl macro: [`SvUTF8`](http://perldoc.perl.org/perlapi.html#SvUTF8).
+        simple fn utf8() -> bool = sv_utf8() != 0
+    }
 
+    /// Return a copy of string in the SV as vector of bytes.
+    ///
+    /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     pub fn pv(&self) -> Vec<u8> {
         unsafe {
             let mut len = 0;
@@ -20,20 +46,36 @@ impl SV {
         }
     }
 
+    /// Return a copy of string in the SV.
+    ///
+    /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     pub fn str(&self) -> Result<String, string::FromUtf8Error> {
         String::from_utf8(self.pv())
     }
 
+    /// Consume SV and convert into raw pointer.
+    ///
+    /// Does not decrement reference count. Returned pointer must be correctly disposed of to avoid
+    /// memory leaks.
     pub fn into_raw(self) -> *mut raw::SV {
         let raw = self.0.as_ptr();
         mem::forget(self);
         raw
     }
 
+    /// Construct new instance from a raw SV pointer without incrementing reference counter.
+    ///
+    /// Owned SV pointers are returned by assorted
+    /// [`newSV`](http://perldoc.perl.org/perlapi.html#newSV) functions.
     pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV(Owned::from_raw_owned(pthx, raw))
     }
-    
+
+    /// Construct new instance from a raw SV pointer and increment reference counter.
+    ///
+    /// Borrowed SV pointers exist on stack and are returned by functions like
+    /// ['av_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch) or
+    /// ['hv_fetch'](http://perldoc.perl.org/perlapi.html#av_fetch).
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV(Owned::from_raw_borrowed(pthx, raw))
     }

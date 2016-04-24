@@ -15,8 +15,8 @@ is_deeply $strings, [
     "Don't panic!",
     "Не паникуйте!",
     "慌てる必要がありません",
-    "☺",
-    "a\x{035C}\x{0361}",
+    "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!",
+    "😱❌",
 ], "unicode strings ok";
 
 ok utf8::is_utf8($strings->[$_]), "string $_ is utf8"

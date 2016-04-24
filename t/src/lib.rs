@@ -1,11 +1,13 @@
 #[macro_use]
 extern crate perl_xs;
 
-use perl_xs::{ IV, UV, NV };
-use perl_xs::{ SV, AV };
+mod main {
+    use perl_xs::{ IV, UV, NV };
+    use perl_xs::{ SV };
 
-XS! {
-    package XSTest {
+    xs! {
+        package XSTest;
+
         sub test_push(ctx) {
             ctx.st_prepush();
             ctx.st_push(-1 as IV);
@@ -35,5 +37,9 @@ XS! {
             }
         }
     }
-    loader boot_XSTest;
+}
+
+xs! {
+    bootstrap boot_XSTest;
+    use main;
 }

@@ -36,7 +36,7 @@ macro_rules! xs_return {
 #[macro_export]
 macro_rules! xs {
     (
-        package $pkg:ident ;
+        package $pkg:path ;
         $( sub $name:ident ($ctx:ident) $body:block )*
     ) => (
         $(

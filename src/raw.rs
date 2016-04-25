@@ -164,4 +164,7 @@ impl Interpreter {
     method! { fn new_sv_pvn(val: *const i8, len: STRLEN, flags: U32) -> *mut SV = Perl_newSVpvn_flags }
 
     method! { fn get_av(name: *const i8, flags: I32) -> *mut AV = Perl_get_av }
+    method! { fn sv_yes() -> *mut SV = ouroboros_sv_yes }
+    method! { fn sv_no() -> *mut SV = ouroboros_sv_no }
+    method! { fn sv_undef() -> *mut SV = ouroboros_sv_undef }
 }

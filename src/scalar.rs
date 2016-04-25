@@ -115,6 +115,15 @@ impl IntoSV for NV {
     }
 }
 
+impl IntoSV for bool {
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        unsafe {
+            let raw = if self { pthx.sv_yes() } else { pthx.sv_no() };
+            SV::from_raw_owned(pthx, raw)
+        }
+    }
+}
+
 impl<'a> IntoSV for &'a str {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {

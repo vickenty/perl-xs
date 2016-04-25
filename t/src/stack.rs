@@ -9,6 +9,8 @@ xs! {
         ctx.st_push(42 as UV);
         ctx.st_push((42.0 as NV).powf(0.5));
         ctx.st_push("Don't panic!");
+        ctx.st_push(true);
+        ctx.st_push(false);
         ctx.st_putback();
     }
 

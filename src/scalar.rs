@@ -3,6 +3,7 @@ use handle::Owned;
 use raw;
 use raw::{ IV, UV, NV };
 use raw::{ SVt_PVAV, SVt_PVHV, SVt_PVCV, SVt_PVGV };
+use array::{ AV };
 use convert::{ IntoSV, FromSV };
 
 pub struct SV(Owned<raw::SV>);
@@ -103,6 +104,30 @@ impl SV {
         ///
         /// Perl macro: ['SvROK'](http://perldoc.perl.org/perlapi.html#SvROK).
         simple fn rv_ok() -> bool = sv_rok() != 0
+    }
+
+    unsafe fn deref_raw(&self) -> *mut raw::SV {
+        self.pthx().sv_rv(self.as_ptr())
+    }
+
+    /// Dereference RV.
+    ///
+    /// Return `None` if `self` is not a valid Perl reference.
+    pub fn deref(&self) -> Option<SV> {
+        if self.rv_ok() {
+            Some(unsafe { SV::from_raw_borrowed(self.pthx(), self.deref_raw()) })
+        } else {
+            None
+        }
+    }
+
+    /// Cast SV into AV.
+    pub fn as_av(self) -> Option<AV> {
+        if self.is_array() {
+            Some(unsafe { AV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
+        } else {
+            None
+        }
     }
 
     /// Consume SV and convert into raw pointer.

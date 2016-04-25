@@ -15,4 +15,13 @@ is_deeply [ map 0+$_, XSTest::test_sv_ok([]) ], [ 0, 0, 0, 0, 1 ], "ref";
 no_leaks_ok { XSTest::test_sv_ok("") };
 no_leaks_ok { XSTest::test_sv_ok([]) };
 
+sub a {}
+
+is_deeply [ map 0+$_, XSTest::test_sv_type(\42) ], [ 1, 0, 0, 0, 0 ], "num";
+is_deeply [ map 0+$_, XSTest::test_sv_type(\"") ], [ 1, 0, 0, 0, 0 ], "str";
+is_deeply [ map 0+$_, XSTest::test_sv_type([0]) ], [ 0, 1, 0, 0, 0 ], "arr";
+is_deeply [ map 0+$_, XSTest::test_sv_type({ }) ], [ 0, 0, 1, 0, 0 ], "hash";
+is_deeply [ map 0+$_, XSTest::test_sv_type(\&a) ], [ 0, 0, 0, 1, 0 ], "code";
+is_deeply [ map 0+$_, XSTest::test_sv_type(\*a) ], [ 1, 0, 0, 0, 1 ], "glob";
+
 done_testing;

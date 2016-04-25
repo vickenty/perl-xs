@@ -2,11 +2,32 @@ use std::{ mem, slice, string };
 use handle::Owned;
 use raw;
 use raw::{ IV, UV, NV };
+use raw::{ SVt_PVAV, SVt_PVHV, SVt_PVCV, SVt_PVGV };
 use convert::{ IntoSV, FromSV };
 
 pub struct SV(Owned<raw::SV>);
 
 impl SV {
+    method! {
+        /// Return true if SV is a real scalar value.
+        simple fn is_scalar() -> bool = sv_type() < SVt_PVAV
+    }
+    method! {
+        /// Return true if SV contains array.
+        simple fn is_array() -> bool = sv_type() == SVt_PVAV
+    }
+    method! {
+        /// Return true if SV contains hash.
+        simple fn is_hash() -> bool = sv_type() == SVt_PVHV
+    }
+    method! {
+        /// Return true if SV contains subroutine.
+        simple fn is_code() -> bool = sv_type() == SVt_PVCV
+    }
+    method! {
+        /// Return true if SV contains glob.
+        simple fn is_glob() -> bool = sv_type() == SVt_PVGV
+    }
     method! {
         /// Return true if SV contains a signed integer.
         ///

@@ -13,6 +13,16 @@ xs! {
             sv.rv_ok());
     }
 
+    sub test_sv_type(ctx) {
+        let sv: SV = ctx.st_fetch::<SV>(0).deref().unwrap();
+        xs_return!(ctx,
+                   sv.is_scalar(),
+                   sv.is_array(),
+                   sv.is_hash(),
+                   sv.is_code(),
+                   sv.is_glob());
+    }
+
     sub test_unicode(ctx) {
         let sv: SV = ctx.st_fetch(0);
         let utf8: IV = if sv.utf8() { 1 } else { 0 };

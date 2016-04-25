@@ -81,7 +81,7 @@ impl SV {
         simple fn utf8() -> bool = sv_utf8() != 0
     }
 
-    /// Return a copy of string in the SV as vector of bytes.
+    /// Return a copy of string in the SV as a vector of bytes.
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     pub fn pv(&self) -> Vec<u8> {

@@ -100,8 +100,9 @@ impl AV {
     /// See ['av_store'](http://perldoc.perl.org/perlapi.html#av_store).
     pub fn store(&self, key: SSize_t, val: SV) {
         unsafe {
-            let svpp = self.pthx().av_store(self.as_ptr(), key, val.into_raw());
-            if !svpp.is_null() { self.pthx().sv_refcnt_dec(*svpp) }
+            let raw = val.into_raw();
+            let svpp = self.pthx().av_store(self.as_ptr(), key, raw);
+            if svpp.is_null() { self.pthx().sv_refcnt_dec(raw) }
         }
     }
 

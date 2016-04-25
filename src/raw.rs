@@ -96,6 +96,10 @@ impl Interpreter {
     method! { fn sv_nv(arg0: *mut SV) -> NV = ouroboros_sv_nv }
     method! { fn sv_pv(arg0: *mut SV, arg1: *mut STRLEN) -> *const c_char = ouroboros_sv_pv }
     method! { fn sv_pv_nolen(arg0: *mut SV) -> *const c_char = ouroboros_sv_pv_nolen }
+    method! { fn sv_iok(arg0: *mut SV) -> U32 = ouroboros_sv_iok }
+    method! { fn sv_uok(arg0: *mut SV) -> U8 = ouroboros_sv_uok }
+    method! { fn sv_nok(arg0: *mut SV) -> U32 = ouroboros_sv_nok }
+    method! { fn sv_pok(arg0: *mut SV) -> U32 = ouroboros_sv_pok }
     method! { fn sv_rok(arg0: *mut SV) -> U32 = ouroboros_sv_rok }
     method! { fn sv_rv(arg0: *mut SV) -> *mut SV = ouroboros_sv_rv }
     method! { fn sv_type(arg0: *mut SV) -> IV = ouroboros_sv_type }

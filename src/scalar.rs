@@ -8,10 +8,22 @@ pub struct SV(Owned<raw::SV>);
 
 impl SV {
     method! {
+        /// Return true if SV contains a signed integer.
+        ///
+        /// Perl macro: ['SvIOK'](http://perldoc.perl.org/perlapi.html#SvIOK).
+        simple fn iv_ok() -> bool = sv_iok() != 0
+    }
+    method! {
         /// Coerce the given SV to an integer and return it.
         ///
         /// Perl macro: [`SvIV`](http://perldoc.perl.org/perlapi.html#SvIV).
         simple fn iv() -> IV = sv_iv()
+    }
+    method! {
+        /// Return true if SV contains a unsigned integer.
+        ///
+        /// Perl macro: ['SvUOK'](http://perldoc.perl.org/perlapi.html#SvUOK).
+        simple fn uv_ok() -> bool = sv_uok() != 0
     }
     method! {
         /// Coerce the given SV to an unsigned integer and return it.
@@ -20,10 +32,22 @@ impl SV {
         simple fn uv() -> UV = sv_uv()
     }
     method! {
+        /// Return true if SV contains a floating point value.
+        ///
+        /// Perl macro: ['SvNOK'](http://perldoc.perl.org/perlapi.html#SvNOK).
+        simple fn nv_ok() -> bool = sv_nok() != 0
+    }
+    method! {
         /// Coerce the given SV to a floating point value and return it.
         ///
         /// Perl macro: [`SvNV`](http://perldoc.perl.org/perlapi.html#SvNV).
         simple fn nv() -> NV = sv_nv()
+    }
+    method! {
+        /// Return true if SV contains a string.
+        ///
+        /// Perl macro: ['SvPOK'](http://perldoc.perl.org/perlapi.html#SvPOK).
+        simple fn pv_ok() -> bool = sv_pok() != 0
     }
     method! {
         /// Return UTF8 flag on the SV.
@@ -51,6 +75,13 @@ impl SV {
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     pub fn str(&self) -> Result<String, string::FromUtf8Error> {
         String::from_utf8(self.pv())
+    }
+
+    method! {
+        /// Return true if SV contains a Perl reference.
+        ///
+        /// Perl macro: ['SvROK'](http://perldoc.perl.org/perlapi.html#SvROK).
+        simple fn rv_ok() -> bool = sv_rok() != 0
     }
 
     /// Consume SV and convert into raw pointer.

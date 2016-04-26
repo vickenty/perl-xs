@@ -10,11 +10,10 @@ mod handle;
 
 mod scalar;
 mod array;
-mod context;
+pub mod context;
 pub mod convert;
 
 pub use raw::{ IV, UV, NV, Size_t, SSize_t, STRLEN };
 pub use raw::{ G_DISCARD, G_VOID };
 pub use scalar::SV;
 pub use array::AV;
-pub use context::Context;

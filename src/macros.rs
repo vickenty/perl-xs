@@ -42,7 +42,7 @@ macro_rules! xs {
         $(
             extern "C" fn $name (pthx: $crate::raw::PerlThreadContext,
                                  _cv: *mut $crate::raw::CV) {
-                let mut $ctx = $crate::Context::new(&pthx);
+                let mut $ctx = $crate::context::Context::new(&pthx);
                 $body
             }
         )*
@@ -65,7 +65,7 @@ macro_rules! xs {
         #[allow(non_snake_case)]
         pub extern "C" fn $boot (pthx: $crate::raw::PerlThreadContext,
                                  _cv: *mut $crate::raw::CV) {
-            let mut ctx = $crate::Context::new(&pthx);
+            let mut ctx = $crate::context::Context::new(&pthx);
             $(
                 for &(subname, subptr) in $( $name )::*::PERL_XS {
                     let cname = ::std::ffi::CString::new(subname).unwrap();

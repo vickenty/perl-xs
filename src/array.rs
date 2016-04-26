@@ -3,6 +3,7 @@ use raw;
 use raw::{ SSize_t };
 use SV;
 
+/// Perl array object.
 pub struct AV(Owned<raw::AV>);
 
 impl AV {

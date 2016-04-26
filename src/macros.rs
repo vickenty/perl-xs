@@ -32,7 +32,8 @@ macro_rules! xs_return {
 /// }
 /// ```
 ///
-/// Function name given to `bootstrap` keyword must start with `boot_` followed by the module name.
+/// Function name given to `bootstrap` keyword must start with `boot_` followed by the Perl module
+/// name.
 #[macro_export]
 macro_rules! xs {
     (

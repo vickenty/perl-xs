@@ -6,6 +6,7 @@ use raw::{ SVt_PVAV, SVt_PVHV, SVt_PVCV, SVt_PVGV };
 use array::{ AV };
 use convert::{ IntoSV, FromSV };
 
+/// Perl scalar object.
 pub struct SV(Owned<raw::SV>);
 
 impl SV {

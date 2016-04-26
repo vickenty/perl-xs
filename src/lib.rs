@@ -1,3 +1,7 @@
+#![deny(missing_docs)]
+
+//! Perl XS API for Rust.
+
 extern crate perl_sys;
 
 #[macro_use]
@@ -5,6 +9,7 @@ mod macros;
 #[macro_use]
 mod helper_macros;
 
+#[allow(missing_docs)]
 pub mod raw;
 mod handle;
 

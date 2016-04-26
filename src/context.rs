@@ -12,6 +12,8 @@ pub struct Context<'a> {
     marker: std::marker::PhantomData<&'a raw::PerlThreadContext>
 }
 
+const EMPTY: &'static [i8] = &[ 0 ];
+
 impl<'a> Context<'a> {
     /// Set up call context.
     ///
@@ -68,8 +70,7 @@ impl<'a> Context<'a> {
     ///
     /// See: ['newXS'](http://perldoc.perl.org/perlapi.html#newXS).
     pub fn new_xs(&mut self, name: &CStr, xsaddr: raw::XSUBADDR_t) {
-        let filename = 0i8;
-        unsafe { self.pthx.new_xs(name.as_ptr(), xsaddr, &filename) };
+        unsafe { self.pthx.new_xs(name.as_ptr(), xsaddr, EMPTY.as_ptr()) };
     }
 
     // GLOBALS

@@ -33,7 +33,7 @@ impl SV {
     method! {
         /// Return true if SV contains a signed integer.
         ///
-        /// Perl macro: ['SvIOK'](http://perldoc.perl.org/perlapi.html#SvIOK).
+        /// Perl macro:[`SvIOK`](http://perldoc.perl.org/perlapi.html#SvIOK).
         simple fn iv_ok() -> bool = sv_iok() != 0
     }
     method! {
@@ -45,7 +45,7 @@ impl SV {
     method! {
         /// Return true if SV contains a unsigned integer.
         ///
-        /// Perl macro: ['SvUOK'](http://perldoc.perl.org/perlapi.html#SvUOK).
+        /// Perl macro:[`SvUOK`](http://perldoc.perl.org/perlapi.html#SvUOK).
         simple fn uv_ok() -> bool = sv_uok() != 0
     }
     method! {
@@ -57,7 +57,7 @@ impl SV {
     method! {
         /// Return true if SV contains a floating point value.
         ///
-        /// Perl macro: ['SvNOK'](http://perldoc.perl.org/perlapi.html#SvNOK).
+        /// Perl macro:[`SvNOK`](http://perldoc.perl.org/perlapi.html#SvNOK).
         simple fn nv_ok() -> bool = sv_nok() != 0
     }
     method! {
@@ -69,7 +69,7 @@ impl SV {
     method! {
         /// Return true if SV contains a string.
         ///
-        /// Perl macro: ['SvPOK'](http://perldoc.perl.org/perlapi.html#SvPOK).
+        /// Perl macro:[`SvPOK`](http://perldoc.perl.org/perlapi.html#SvPOK).
         simple fn pv_ok() -> bool = sv_pok() != 0
     }
     method! {
@@ -103,7 +103,7 @@ impl SV {
     method! {
         /// Return true if SV contains a Perl reference.
         ///
-        /// Perl macro: ['SvROK'](http://perldoc.perl.org/perlapi.html#SvROK).
+        /// Perl macro:[`SvROK`](http://perldoc.perl.org/perlapi.html#SvROK).
         simple fn rv_ok() -> bool = sv_rok() != 0
     }
 
@@ -152,8 +152,8 @@ impl SV {
     /// Construct new instance from a raw SV pointer and increment reference counter.
     ///
     /// Borrowed SV pointers exist on stack and are returned by functions like
-    /// ['av_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch) or
-    /// ['hv_fetch'](http://perldoc.perl.org/perlapi.html#av_fetch).
+    /// [`av_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch) or
+    /// [`hv_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch).
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV(Owned::from_raw_borrowed(pthx, raw))
     }

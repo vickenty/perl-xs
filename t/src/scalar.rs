@@ -6,6 +6,7 @@ xs! {
     sub test_sv_ok(ctx) {
         let sv: SV = ctx.st_fetch(0);
         xs_return!(ctx,
+            sv.ok(),
             sv.iv_ok(),
             sv.uv_ok(),
             sv.nv_ok(),

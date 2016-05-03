@@ -31,6 +31,12 @@ impl SV {
         simple fn is_glob() -> bool = sv_type() == SVt_PVGV
     }
     method! {
+        /// Return true if SV is defined.
+        ///
+        /// [`SvOK`](http://perldoc.perl.org/perlapi.html#SvOK).
+        simple fn ok() -> bool = sv_ok() != 0
+    }
+    method! {
         /// Return true if SV contains a signed integer.
         ///
         /// Perl macro:[`SvIOK`](http://perldoc.perl.org/perlapi.html#SvIOK).

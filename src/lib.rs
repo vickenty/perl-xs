@@ -2,6 +2,7 @@
 
 //! Perl XS API for Rust.
 
+#[macro_use]
 extern crate perl_sys;
 
 #[macro_use]

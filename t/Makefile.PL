@@ -10,6 +10,7 @@ test_requires "Test::More" => 0;
 requires "XSLoader" => 0;
 
 rust_use_perl_xs { path => ".." };
+rust_requires "perl-sys" => { path => "../../perl-sys" };
 rust_write;
 
 WriteAll;

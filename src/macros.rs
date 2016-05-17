@@ -41,10 +41,11 @@ macro_rules! xs {
         $( sub $name:ident ($ctx:ident) $body:block )*
     ) => (
         $(
-            extern "C" fn $name (pthx: $crate::raw::PerlThreadContext,
-                                 _cv: *mut $crate::raw::CV) {
-                let mut $ctx = $crate::context::Context::new(&pthx);
-                $body
+            pthx! {
+                fn $name (pthx, _cv: *mut $crate::raw::CV) {
+                    let mut $ctx = $crate::context::Context::new(&pthx);
+                    $body
+                }
             }
         )*
 
@@ -62,19 +63,20 @@ macro_rules! xs {
         bootstrap $boot:ident;
         $( use $( $name:ident )::+ ; )*
     ) => (
-        #[no_mangle]
-        #[allow(non_snake_case)]
-        pub extern "C" fn $boot (pthx: $crate::raw::PerlThreadContext,
-                                 _cv: *mut $crate::raw::CV) {
-            let mut ctx = $crate::context::Context::new(&pthx);
-            $(
-                for &(subname, subptr) in $( $name )::*::PERL_XS {
-                    let cname = ::std::ffi::CString::new(subname).unwrap();
-                    ctx.new_xs(&cname, subptr);
-                }
-            )*
+        pthx! {
+            #[no_mangle]
+            #[allow(non_snake_case)]
+            fn $boot (pthx, _cv: *mut $crate::raw::CV) {
+                let mut ctx = $crate::context::Context::new(&pthx);
+                $(
+                    for &(subname, subptr) in $( $name )::*::PERL_XS {
+                        let cname = ::std::ffi::CString::new(subname).unwrap();
+                        ctx.new_xs(&cname, subptr);
+                    }
+                )*
 
-            xs_return!(ctx, 1 as $crate::raw::IV);
+                xs_return!(ctx, 1 as $crate::raw::IV);
+            }
         }
     );
 }

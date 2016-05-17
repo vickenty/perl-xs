@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate perl_xs;
+#[macro_use]
+extern crate perl_sys;
 
 mod stack;
 mod scalar;

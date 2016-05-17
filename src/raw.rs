@@ -37,9 +37,9 @@ macro_rules! xcpt_try {
         let mut v = mem::zeroed();
         {
             let mut callback: &mut FnMut() = &mut || ptr::write(&mut v, { $( $body )* });
-            let rc = ouroboros_xcpt_try($pthx,
+            let rc = pthx!(ouroboros_xcpt_try($pthx,
                                         mem::transmute(xcpt_bouncer as extern "C" fn(_)),
-                                        mem::transmute(&mut callback));
+                                        mem::transmute(&mut callback)));
             if rc != 0 {
                 panic!(Xcpt(rc));
             }
@@ -64,7 +64,7 @@ macro_rules! method {
         fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) -> $rtype:ty = $imp:ident
     ) => (
         pub unsafe fn $name ( &self, $( $pname : $ptype ),* ) -> $rtype {
-            xcpt_try! { self.0, $imp( self.0, $( $pname ),* ) }
+            xcpt_try! { self.0, pthx!($imp( self.0, $( $pname ),* )) }
         }
     );
 }

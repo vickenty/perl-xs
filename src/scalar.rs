@@ -218,3 +218,10 @@ impl<'a> IntoSV for &'a str {
         }
     }
 }
+
+impl IntoSV for SV {
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        assert!(self.pthx() == pthx);
+        self
+    }
+}

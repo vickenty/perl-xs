@@ -4,6 +4,7 @@ use raw;
 use raw::{ IV, UV, NV };
 use raw::{ SVt_PVAV, SVt_PVHV, SVt_PVCV, SVt_PVGV };
 use array::{ AV };
+use hash::{ HV };
 use convert::{ IntoSV, FromSV };
 
 /// Perl scalar object.
@@ -132,6 +133,15 @@ impl SV {
     pub fn as_av(self) -> Option<AV> {
         if self.is_array() {
             Some(unsafe { AV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
+        } else {
+            None
+        }
+    }
+
+    /// Cast SV into HV.
+    pub fn as_hv(self) -> Option<HV> {
+        if self.is_hash() {
+            Some(unsafe { HV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
         } else {
             None
         }

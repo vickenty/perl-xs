@@ -10,7 +10,7 @@ pub use perl_sys::consts::*;
 
 pub type Stack = OuroborosStack;
 
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub struct Interpreter (PerlThreadContext);
 
 impl Interpreter {
@@ -145,6 +145,12 @@ impl Interpreter {
     method! { fn av_undef(av: *mut AV) = Perl_av_undef }
     method! { fn av_unshift(av: *mut AV, num: SSize_t) = Perl_av_unshift }
 
+    method! { fn hv_clear(hv: *mut HV) = Perl_hv_clear }
+    method! { fn hv_clear_placeholders(hv: *mut HV) = Perl_hv_clear_placeholders }
+    method! { fn hv_delete(hv: *mut HV, key: *const c_char, klen: I32, flags: I32) -> *mut SV = Perl_hv_delete }
+    method! { fn hv_delete_ent(hv: *mut HV, keysv: *mut SV, flags: I32, hash: U32) -> *mut SV = Perl_hv_delete_ent }
+    method! { fn hv_exists(hv: *mut HV, key: *const c_char, klen: I32) -> c_bool = Perl_hv_exists }
+    method! { fn hv_exists_ent(hv: *mut HV, keysv: *mut SV, hash: U32) -> c_bool = Perl_hv_exists_ent }
     method! { fn hv_fetch(hv: *mut HV, key: *const c_char, klen: I32, lval: I32) -> *mut *mut SV = Perl_hv_fetch }
     method! { fn hv_fetch_ent(hv: *mut HV, keysv: *mut SV, lval: I32, hash: U32) -> *mut HE = Perl_hv_fetch_ent }
     method! { fn hv_fill(hv: *mut HV) -> STRLEN = Perl_hv_fill }

@@ -1,5 +1,10 @@
 #[macro_export]
 macro_rules! xs_return {
+    ($ctx:ident) => {{
+        $ctx.st_prepush();
+        $ctx.st_putback();
+    }};
+
     ($ctx:ident, $( $val:expr ),*) => {{
         $ctx.st_prepush();
         $( $ctx.st_push($val); )*

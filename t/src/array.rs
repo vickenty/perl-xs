@@ -1,4 +1,4 @@
-use perl_xs::{ IV, SV, AV };
+use perl_xs::SV;
 
 xs! {
     package XSTest::Array;

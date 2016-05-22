@@ -185,6 +185,18 @@ impl FromSV for IV {
     }
 }
 
+impl FromSV for UV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> UV {
+        pthx.sv_uv(raw)
+    }
+}
+
+impl FromSV for NV {
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> NV {
+        pthx.sv_nv(raw)
+    }
+}
+
 impl FromSV for SV {
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV::from_raw_borrowed(pthx, raw)
@@ -233,5 +245,14 @@ impl IntoSV for SV {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         assert!(self.pthx() == pthx);
         self
+    }
+}
+
+impl IntoSV for () {
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        unsafe {
+            let svp = pthx.new_sv(0);
+            SV::from_raw_owned(pthx, svp)
+        }
     }
 }

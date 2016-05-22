@@ -1,7 +1,7 @@
 //! Context for XS subroutine calls.
 use std;
 use raw;
-use { IV, AV };
+use { IV, AV, SV };
 use convert::{ FromSV, IntoSV };
 use std::ffi::CStr;
 
@@ -92,5 +92,12 @@ impl<'a> Context<'a> {
     /// See: [`call_pv`](http://perldoc.perl.org/perlapi.html#call_pv).
     pub fn call_pv(&mut self, name: &CStr, flags: IV) {
         unsafe { self.pthx.call_pv(name.as_ptr(), flags as raw::I32) };
+    }
+
+    // SCALARS
+
+    /// Allocate new SV of type appropriate to store `T`
+    pub fn new_sv<T>(&mut self, val: T) -> SV where T: IntoSV {
+        val.into_sv(self.pthx)
     }
 }

@@ -6,29 +6,47 @@ use convert::{ FromSV, IntoSV };
 use std::ffi::CStr;
 
 /// XS call context.
-pub struct Context<'a> {
+pub struct Context {
     pthx: raw::Interpreter,
     stack: raw::Stack,
-    marker: std::marker::PhantomData<&'a raw::PerlThreadContext>
 }
 
 const EMPTY: &'static [i8] = &[ 0 ];
 
-impl<'a> Context<'a> {
-    /// Set up call context.
+impl Context {
+    /// Invoke closure with the context of Perl subroutine call.
     ///
-    /// See: [`dXSARGS`](http://perldoc.perl.org/perlapi.html#dXSARGS).
-    pub fn new(pthx: &'a raw::PerlThreadContext) -> Self {
+    /// This function must be called exactly once per subroutine: it consumes one stack frame
+    /// prepared for us by the Perl interpreter. Multiple use will leave the stack state in bad
+    /// shape.
+    ///
+    /// This function called automatically by subroutines defined with the `xs!` macro.
+    ///
+    /// Any panics that happen inside the closure will be converted to Perl exceptions and
+    /// re-thrown. Panics with `String` or `&str` argument will use that as the exception text,
+    /// other types will result in the default text message.
+    ///
+    /// Perl exceptions in code called by the closure will be captured and turned into panics, to be
+    /// re-thrown again as perl exceptions after executing Rust destructors. Note, that Perl
+    /// extension API does not allow such exceptions to be handled by the programmer (see paragraph
+    /// on [Exception Handling](http://perldoc.perl.org/perlguts.html#Exception-Handling) in the
+    /// Perl documentation).
+    pub fn wrap<F>(pthx: raw::PerlThreadContext, f: F)
+        where F: FnOnce(&mut Self) + std::panic::UnwindSafe
+    {
         unsafe {
-            let mut ctx = Context {
-                pthx: raw::Interpreter::new(*pthx),
-                stack: std::mem::uninitialized(),
-                marker: std::marker::PhantomData,
-            };
+            let perl = raw::Interpreter::new(pthx);
 
-            ctx.pthx.stack_init(&mut ctx.stack);
+            perl.catch_unwind(|| {
+                let mut ctx = Context {
+                    pthx: perl,
+                    stack: std::mem::uninitialized(),
+                };
 
-            ctx
+                perl.stack_init(&mut ctx.stack);
+
+                f(&mut ctx)
+            });
         }
     }
 

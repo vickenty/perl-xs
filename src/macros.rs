@@ -48,8 +48,7 @@ macro_rules! xs {
         $(
             pthx! {
                 fn $name (pthx, _cv: *mut $crate::raw::CV) {
-                    let mut $ctx = $crate::context::Context::new(&pthx);
-                    $body
+                    $crate::context::Context::wrap(pthx, |$ctx| $body);
                 }
             }
         )*
@@ -72,15 +71,16 @@ macro_rules! xs {
             #[no_mangle]
             #[allow(non_snake_case)]
             fn $boot (pthx, _cv: *mut $crate::raw::CV) {
-                let mut ctx = $crate::context::Context::new(&pthx);
-                $(
-                    for &(subname, subptr) in $( $name )::*::PERL_XS {
-                        let cname = ::std::ffi::CString::new(subname).unwrap();
-                        ctx.new_xs(&cname, subptr);
-                    }
-                )*
+                $crate::context::Context::wrap(pthx, |ctx| {
+                    $(
+                        for &(subname, subptr) in $( $name )::*::PERL_XS {
+                            let cname = ::std::ffi::CString::new(subname).unwrap();
+                            ctx.new_xs(&cname, subptr);
+                        }
+                    )*
 
-                xs_return!(ctx, 1 as $crate::raw::IV);
+                    xs_return!(ctx, 1 as $crate::raw::IV);
+                });
             }
         }
     );

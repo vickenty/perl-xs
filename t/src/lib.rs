@@ -7,6 +7,7 @@ mod stack;
 mod scalar;
 mod array;
 mod hash;
+mod panic;
 
 xs! {
     bootstrap boot_XSTest;
@@ -14,4 +15,5 @@ xs! {
     use scalar;
     use array;
     use hash;
+    use panic;
 }

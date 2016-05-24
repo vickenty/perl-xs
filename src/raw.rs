@@ -2,6 +2,8 @@
 
 use std::ptr;
 use std::mem;
+use std::any;
+use std::panic;
 use std::os::raw::{ c_int, c_char };
 use perl_sys::funcs::*;
 
@@ -70,6 +72,36 @@ macro_rules! method {
 }
 
 impl Interpreter {
+    pub unsafe fn catch_unwind<F, T>(&self, f: F) -> T
+        where F: FnOnce() -> T + panic::UnwindSafe
+    {
+        let res = panic::catch_unwind(f);
+        match res {
+            Ok(v) => v,
+            Err(e) => self.rethrow_panic(e),
+        }
+    }
+
+    unsafe fn rethrow_panic(&self, e: Box<any::Any>) -> ! {
+        if let Some(&Xcpt(rc)) = e.downcast_ref() {
+            pthx!(ouroboros_xcpt_rethrow(self.0, rc));
+            unreachable!();
+        }
+
+        if let Some(&msg) = e.downcast_ref::<&str>() {
+            let err = pthx!(Perl_newSVpvn_flags(self.0,
+                                                msg.as_ptr() as *const i8,
+                                                msg.len() as STRLEN,
+                                                SVf_UTF8 as U32));
+            pthx!(Perl_croak_sv(self.0, err));
+            unreachable!();
+        }
+
+        let msg = b"unknown typed panic inside Rust code\0";
+        pthx!(Perl_croak(self.0, msg.as_ptr() as *const c_char));
+        unreachable!();
+    }
+
     method! { fn stack_init(arg0: *mut Stack) = ouroboros_stack_init }
     method! { fn stack_items(arg0: *mut Stack) -> c_int = ouroboros_stack_items }
     method! { fn stack_prepush(arg0: *mut Stack) = ouroboros_stack_prepush }

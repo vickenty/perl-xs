@@ -7,6 +7,7 @@ abstract "Tests for perl-xs";
 configure_requires "Module::Install::Rust" => 0;
 test_requires "Test::LeakTrace" => 0;
 test_requires "Test::More" => 0;
+test_requires "Test::Fatal" => 0;
 requires "XSLoader" => 0;
 
 rust_use_perl_xs { path => ".." };

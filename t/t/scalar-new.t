@@ -16,7 +16,7 @@ no_leaks_ok { XSTest::test_new_sv_nv(42**0.5) };
 
 cmp_ok XSTest::test_new_sv_nv(0+"inf"), "==", "inf", "inf nv ok";
 cmp_ok XSTest::test_new_sv_nv(0+"-inf"), "==", "-inf", "-inf nv ok";
-is XSTest::test_new_sv_nv(0+"nan"), "NaN", "nan nv ok";
+is XSTest::test_new_sv_nv(0+"nan"), 0+"nan", "nan nv ok";
 
 ok !defined(XSTest::test_new_sv_undef()), "undef ok";
 no_leaks_ok { XSTest::test_new_sv_undef() };

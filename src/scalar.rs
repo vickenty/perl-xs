@@ -130,7 +130,7 @@ impl SV {
     }
 
     /// Cast SV into AV.
-    pub fn as_av(self) -> Option<AV> {
+    pub fn into_av(self) -> Option<AV> {
         if self.is_array() {
             Some(unsafe { AV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
         } else {
@@ -139,7 +139,7 @@ impl SV {
     }
 
     /// Cast SV into HV.
-    pub fn as_hv(self) -> Option<HV> {
+    pub fn into_hv(self) -> Option<HV> {
         if self.is_hash() {
             Some(unsafe { HV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
         } else {

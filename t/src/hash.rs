@@ -7,7 +7,7 @@ xs! {
         let rv: SV = ctx.st_fetch(0);
         let key: SV = ctx.st_fetch(1);
         
-        if let Some(hv) = rv.deref().and_then(|hv| hv.as_hv()) {
+        if let Some(hv) = rv.deref().and_then(|hv| hv.into_hv()) {
             if let Some(sv) = hv.fetch::<SV>(&key.str().unwrap()) {
                 xs_return!(ctx, sv);
             }
@@ -21,7 +21,7 @@ xs! {
         let key: SV = ctx.st_fetch(1);
         let val: SV = ctx.st_fetch(2);
         
-        if let Some(hv) = rv.deref().and_then(|hv| hv.as_hv()) {
+        if let Some(hv) = rv.deref().and_then(|hv| hv.into_hv()) {
             hv.store(&key.str().unwrap(), val);
         }
 
@@ -32,7 +32,7 @@ xs! {
         let rv: SV = ctx.st_fetch(0);
         let sv: SV = ctx.st_fetch(1);
 
-        if let Some(hv) = rv.deref().and_then(|hv| hv.as_hv()) {
+        if let Some(hv) = rv.deref().and_then(|hv| hv.into_hv()) {
             xs_return!(ctx, hv.exists(&sv.str().unwrap()));
         }
         xs_return!(ctx);
@@ -40,7 +40,7 @@ xs! {
 
     sub test_clear(ctx) {
         let rv: SV = ctx.st_fetch(0);
-        if let Some(hv) = rv.deref().and_then(|hv| hv.as_hv()) {
+        if let Some(hv) = rv.deref().and_then(|hv| hv.into_hv()) {
             hv.clear();
         }
         xs_return!(ctx);
@@ -50,7 +50,7 @@ xs! {
         let rv: SV = ctx.st_fetch(0);
         let sv: SV = ctx.st_fetch(1);
 
-        if let Some(hv) = rv.deref().and_then(|hv| hv.as_hv()) {
+        if let Some(hv) = rv.deref().and_then(|hv| hv.into_hv()) {
             if let Some(sv) = hv.delete::<SV>(&sv.str().unwrap()) {
                 xs_return!(ctx, sv);
             }

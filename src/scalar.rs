@@ -129,6 +129,20 @@ impl SV {
         }
     }
 
+    /// Dereference RV into AV.
+    ///
+    /// Return `None` if `self` is not an array reference.
+    pub fn deref_av(&self) -> Option<AV> {
+        self.deref().and_then(|sv| sv.into_av())
+    }
+
+    /// Dereference RV into HV.
+    ///
+    /// Return `None` if `self` is not a hash reference.
+    pub fn deref_hv(&self) -> Option<HV> {
+        self.deref().and_then(|sv| sv.into_hv())
+    }
+
     /// Cast SV into AV.
     pub fn into_av(self) -> Option<AV> {
         if self.is_array() {

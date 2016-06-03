@@ -6,7 +6,8 @@ xs! {
     sub test_store(ctx) {
         let rv: SV = ctx.st_fetch(0);
         let sv: SV = ctx.st_fetch(1);
-        if let Some(av) = rv.deref().and_then(|av| av.into_av()) {
+
+        if let Some(av) = rv.deref_av() {
             av.store(0, sv);
         }
     }

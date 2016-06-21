@@ -64,12 +64,21 @@ impl Context {
         unsafe { self.pthx.stack_putback(&mut self.stack) };
     }
 
+    /// Return number of items on the argument stack.
+    ///
+    /// [`items`](http://perldoc.perl.org/perlapi.html#items).
+    pub fn st_items(&mut self) -> isize {
+        unsafe { self.pthx.stack_items(&mut self.stack) as isize }
+    }
+
     /// Fetch value from the Perl stack.
     ///
     /// See: [`ST`](http://perldoc.perl.org/perlapi.html#ST).
     pub fn st_fetch<T>(&mut self, idx: isize) -> T where T: FromSV
     {
-        /* FIXME: panic if idx > items */
+        if idx >= self.st_items() {
+            panic!("too few items on stack");
+        }
         let svp = unsafe { self.pthx.stack_fetch(&mut self.stack, idx as raw::SSize_t) };
         unsafe { T::from_sv(self.pthx, svp) }
     }

@@ -13,7 +13,7 @@ $hv = {};
 XSTest::Hash::test_store($hv, "Don't panic!", 42);
 is_deeply $hv, { "Don't panic!" => 42 }, "store latin1";
 
-no_leaks_ok { XSTest::Hash::test_store({}, "Don't panic!"); };
+no_leaks_ok { XSTest::Hash::test_store({}, "Don't panic!", 42); };
 
 $hv = {};
 XSTest::Hash::test_store($hv, "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!", 42);

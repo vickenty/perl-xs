@@ -4,6 +4,7 @@ use std::ptr;
 use std::mem;
 use std::any;
 use std::panic;
+use std::ffi::CString;
 use std::os::raw::{ c_int, c_char };
 use perl_sys::funcs::*;
 
@@ -22,51 +23,30 @@ impl Interpreter {
 // Contains result of failed JMPENV_PUSH() while propagating through Rust.
 struct Xcpt(c_int);
 
-// Wrapper to safely call potentially dying perl functions (which is pretty much all of them because
-// magic and ties).
-//
-// Put actual call into Perl inside a closure. `ouroboros_xcpt_try()` will call the closure while
-// capturing Perl exceptions, so they don't skip Rust code except the closure itself, which should
-// be fine, since closure is FnMut and has no destructors.
-//
-// If it returns zero, we assume that closure did not die and `v` was assigned to, making it safe to
-// return, otherwise we panic and possibly incorrect value of `v` is not revealed.
-//
-// This only works with POD return types and non-panicing $body, which should always be the case for
-// Perl API.
-macro_rules! xcpt_try {
-    ( $pthx:expr, $( $body:stmt )* ) => {{
-        let mut v = mem::zeroed();
-        {
-            let mut callback: &mut FnMut() = &mut || ptr::write(&mut v, { $( $body )* });
-            let rc = pthx!(ouroboros_xcpt_try($pthx,
-                                        mem::transmute(xcpt_bouncer as extern "C" fn(_)),
-                                        mem::transmute(&mut callback)));
-            if rc != 0 {
-                panic!(Xcpt(rc));
-            }
-        }
-        v
-    }}
-}
-
-// Helper function for calling Rust closure from C.
-extern "C" fn xcpt_bouncer(closure: &mut &mut FnMut()) {
-    (*closure)();
-}
-
 macro_rules! method {
     (
         fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) = $imp:ident
     ) => (
-        method! { fn $name ( $( $pname : $ptype ),* ) -> () = $imp }
+        #[inline]
+        pub unsafe fn $name ( &self, $( $pname : $ptype ),* ) {
+            let rc: c_int = pthx!( $imp ( self.0, $( $pname ),* ));
+            if rc != 0 {
+                panic!(Xcpt(rc));
+            }
+        }
     );
 
     (
         fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) -> $rtype:ty = $imp:ident
     ) => (
+        #[inline]
         pub unsafe fn $name ( &self, $( $pname : $ptype ),* ) -> $rtype {
-            xcpt_try! { self.0, pthx!($imp( self.0, $( $pname ),* )) }
+            let mut rv: $rtype = mem::zeroed();
+            let rc: c_int = pthx!( $imp ( self.0, &mut rv, $( $pname ),* ));
+            if rc != 0 {
+                panic!(Xcpt(rc));
+            }
+            rv
         }
     );
 }
@@ -89,16 +69,15 @@ impl Interpreter {
         }
 
         if let Some(&msg) = e.downcast_ref::<&str>() {
-            let err = pthx!(Perl_newSVpvn_flags(self.0,
-                                                msg.as_ptr() as *const i8,
-                                                msg.len() as STRLEN,
-                                                SVf_UTF8 as U32));
-            pthx!(Perl_croak_sv(self.0, err));
+            let cmsg = match CString::new(msg) {
+                Ok(cmsg) => pthx!(croak(self.0, cmsg.as_ptr() as *const c_char)),
+                Err(_) => pthx!(croak(self.0, b"unrepresentable error: null byte inside string\0".as_ptr() as *const c_char)),
+            };
             unreachable!();
         }
 
         let msg = b"unknown typed panic inside Rust code\0";
-        pthx!(Perl_croak(self.0, msg.as_ptr() as *const c_char));
+        pthx!(croak(self.0, msg.as_ptr() as *const c_char));
         unreachable!();
     }
 
@@ -162,51 +141,51 @@ impl Interpreter {
     method! { fn he_svkey_set(arg0: *mut HE, arg1: *mut SV) -> *mut SV = ouroboros_he_svkey_set }
     method! { fn he_val(arg0: *mut HE) -> *mut SV = ouroboros_he_val }
 
-    method! { fn av_clear(av: *mut AV) = Perl_av_clear }
-    method! { fn av_delete(av: *mut AV, key: SSize_t, flags: I32) -> *mut SV = Perl_av_delete }
-    method! { fn av_exists(av: *mut AV, key: SSize_t) -> c_bool = Perl_av_exists }
-    method! { fn av_extend(av: *mut AV, key: SSize_t) = Perl_av_extend }
-    method! { fn av_fetch(av: *mut AV, key: SSize_t, flags: I32) -> *mut *mut SV = Perl_av_fetch }
-    method! { fn av_fill(av: *mut AV, fill: SSize_t) = Perl_av_fill }
-    method! { fn av_len(av: *mut AV) -> SSize_t = Perl_av_len }
-    method! { fn av_make(size: SSize_t, strp: *mut *mut SV) -> *mut AV = Perl_av_make }
-    method! { fn av_pop(av: *mut AV) -> *mut SV = Perl_av_pop }
-    method! { fn av_push(av: *mut AV, val: *mut SV) = Perl_av_push }
-    method! { fn av_shift(av: *mut AV) -> *mut SV = Perl_av_shift }
-    method! { fn av_store(av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV = Perl_av_store }
-    method! { fn av_undef(av: *mut AV) = Perl_av_undef }
-    method! { fn av_unshift(av: *mut AV, num: SSize_t) = Perl_av_unshift }
+    method! { fn av_clear(av: *mut AV) = av_clear }
+    method! { fn av_delete(av: *mut AV, key: SSize_t, flags: I32) -> *mut SV = av_delete }
+    method! { fn av_exists(av: *mut AV, key: SSize_t) -> c_bool = av_exists }
+    method! { fn av_extend(av: *mut AV, key: SSize_t) = av_extend }
+    method! { fn av_fetch(av: *mut AV, key: SSize_t, flags: I32) -> *mut *mut SV = av_fetch }
+    method! { fn av_fill(av: *mut AV, fill: SSize_t) = av_fill }
+    method! { fn av_len(av: *mut AV) -> SSize_t = av_len }
+    method! { fn av_make(size: SSize_t, strp: *mut *mut SV) -> *mut AV = av_make }
+    method! { fn av_pop(av: *mut AV) -> *mut SV = av_pop }
+    method! { fn av_push(av: *mut AV, val: *mut SV) = av_push }
+    method! { fn av_shift(av: *mut AV) -> *mut SV = av_shift }
+    method! { fn av_store(av: *mut AV, key: SSize_t, sv: *mut SV) -> *mut *mut SV = av_store }
+    method! { fn av_undef(av: *mut AV) = av_undef }
+    method! { fn av_unshift(av: *mut AV, num: SSize_t) = av_unshift }
 
-    method! { fn hv_clear(hv: *mut HV) = Perl_hv_clear }
-    method! { fn hv_clear_placeholders(hv: *mut HV) = Perl_hv_clear_placeholders }
-    method! { fn hv_delete(hv: *mut HV, key: *const c_char, klen: I32, flags: I32) -> *mut SV = Perl_hv_delete }
-    method! { fn hv_delete_ent(hv: *mut HV, keysv: *mut SV, flags: I32, hash: U32) -> *mut SV = Perl_hv_delete_ent }
-    method! { fn hv_exists(hv: *mut HV, key: *const c_char, klen: I32) -> c_bool = Perl_hv_exists }
-    method! { fn hv_exists_ent(hv: *mut HV, keysv: *mut SV, hash: U32) -> c_bool = Perl_hv_exists_ent }
-    method! { fn hv_fetch(hv: *mut HV, key: *const c_char, klen: I32, lval: I32) -> *mut *mut SV = Perl_hv_fetch }
-    method! { fn hv_fetch_ent(hv: *mut HV, keysv: *mut SV, lval: I32, hash: U32) -> *mut HE = Perl_hv_fetch_ent }
-    method! { fn hv_fill(hv: *mut HV) -> STRLEN = Perl_hv_fill }
-    method! { fn hv_iterinit(hv: *mut HV) -> I32 = Perl_hv_iterinit }
-    method! { fn hv_iterkey(entry: *mut HE, retlen: *mut I32) -> *mut c_char = Perl_hv_iterkey }
-    method! { fn hv_iterkeysv(entry: *mut HE) -> *mut SV = Perl_hv_iterkeysv }
-    method! { fn hv_iternext(hv: *mut HV) -> *mut HE = Perl_hv_iternext }
-    method! { fn hv_iternextsv(hv: *mut HV, key: *mut *mut c_char, retlen: *mut I32) -> *mut SV = Perl_hv_iternextsv }
-    method! { fn hv_iterval(hv: *mut HV, entry: *mut HE) -> *mut SV = Perl_hv_iterval }
-    method! { fn hv_magic(hv: *mut HV, gv: *mut GV, how: c_int) = Perl_hv_magic }
-    method! { fn hv_scalar(hv: *mut HV) -> *mut SV = Perl_hv_scalar }
-    method! { fn hv_store(hv: *mut HV, key: *const c_char, klen: I32, val: *mut SV, hash: U32) -> *mut *mut SV = Perl_hv_store }
-    method! { fn hv_store_ent(hv: *mut HV, key: *mut SV, val: *mut SV, hash: U32) -> *mut HE = Perl_hv_store_ent }
+    method! { fn hv_clear(hv: *mut HV) = hv_clear }
+    method! { fn hv_clear_placeholders(hv: *mut HV) = hv_clear_placeholders }
+    method! { fn hv_delete(hv: *mut HV, key: *const c_char, klen: I32, flags: I32) -> *mut SV = hv_delete }
+    method! { fn hv_delete_ent(hv: *mut HV, keysv: *mut SV, flags: I32, hash: U32) -> *mut SV = hv_delete_ent }
+    method! { fn hv_exists(hv: *mut HV, key: *const c_char, klen: I32) -> c_bool = hv_exists }
+    method! { fn hv_exists_ent(hv: *mut HV, keysv: *mut SV, hash: U32) -> c_bool = hv_exists_ent }
+    method! { fn hv_fetch(hv: *mut HV, key: *const c_char, klen: I32, lval: I32) -> *mut *mut SV = hv_fetch }
+    method! { fn hv_fetch_ent(hv: *mut HV, keysv: *mut SV, lval: I32, hash: U32) -> *mut HE = hv_fetch_ent }
+    method! { fn hv_fill(hv: *mut HV) -> STRLEN = hv_fill }
+    method! { fn hv_iterinit(hv: *mut HV) -> I32 = hv_iterinit }
+    method! { fn hv_iterkey(entry: *mut HE, retlen: *mut I32) -> *mut c_char = hv_iterkey }
+    method! { fn hv_iterkeysv(entry: *mut HE) -> *mut SV = hv_iterkeysv }
+    method! { fn hv_iternext(hv: *mut HV) -> *mut HE = hv_iternext }
+    method! { fn hv_iternextsv(hv: *mut HV, key: *mut *mut c_char, retlen: *mut I32) -> *mut SV = hv_iternextsv }
+    method! { fn hv_iterval(hv: *mut HV, entry: *mut HE) -> *mut SV = hv_iterval }
+    method! { fn hv_magic(hv: *mut HV, gv: *mut GV, how: c_int) = hv_magic }
+    method! { fn hv_scalar(hv: *mut HV) -> *mut SV = hv_scalar }
+    method! { fn hv_store(hv: *mut HV, key: *const c_char, klen: I32, val: *mut SV, hash: U32) -> *mut *mut SV = hv_store }
+    method! { fn hv_store_ent(hv: *mut HV, key: *mut SV, val: *mut SV, hash: U32) -> *mut HE = hv_store_ent }
 
-    method! { fn call_pv(name: *const i8, flags: I32) -> I32 = Perl_call_pv }
+    method! { fn call_pv(name: *const i8, flags: I32) -> I32 = call_pv }
 
-    method! { fn new_xs(name: *const i8, func: XSUBADDR_t, file: *const i8) -> *mut CV = Perl_newXS }
-    method! { fn new_sv(len: STRLEN) -> *mut SV = Perl_newSV }
-    method! { fn new_sv_iv(val: IV) -> *mut SV = Perl_newSViv }
-    method! { fn new_sv_uv(val: UV) -> *mut SV = Perl_newSVuv }
-    method! { fn new_sv_nv(val: NV) -> *mut SV = Perl_newSVnv }
-    method! { fn new_sv_pvn(val: *const i8, len: STRLEN, flags: U32) -> *mut SV = Perl_newSVpvn_flags }
+    method! { fn new_xs(name: *const i8, func: XSUBADDR_t, file: *const i8) -> *mut CV = newXS }
+    method! { fn new_sv(len: STRLEN) -> *mut SV = newSV }
+    method! { fn new_sv_iv(val: IV) -> *mut SV = newSViv }
+    method! { fn new_sv_uv(val: UV) -> *mut SV = newSVuv }
+    method! { fn new_sv_nv(val: NV) -> *mut SV = newSVnv }
+    method! { fn new_sv_pvn(val: *const i8, len: STRLEN, flags: U32) -> *mut SV = newSVpvn_flags }
 
-    method! { fn get_av(name: *const i8, flags: I32) -> *mut AV = Perl_get_av }
+    method! { fn get_av(name: *const i8, flags: I32) -> *mut AV = get_av }
     method! { fn sv_yes() -> *mut SV = ouroboros_sv_yes }
     method! { fn sv_no() -> *mut SV = ouroboros_sv_no }
     method! { fn sv_undef() -> *mut SV = ouroboros_sv_undef }

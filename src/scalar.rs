@@ -92,6 +92,7 @@ impl SV {
     /// Return a copy of string in the SV as a vector of bytes.
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
+    #[inline]
     pub fn pv(&self) -> Vec<u8> {
         unsafe {
             let mut len = 0;
@@ -114,6 +115,7 @@ impl SV {
         simple fn rv_ok() -> bool = sv_rok() != 0
     }
 
+    #[inline]
     unsafe fn deref_raw(&self) -> *mut raw::SV {
         self.pthx().sv_rv(self.as_ptr())
     }
@@ -121,6 +123,7 @@ impl SV {
     /// Dereference RV.
     ///
     /// Return `None` if `self` is not a valid Perl reference.
+    #[inline]
     pub fn deref(&self) -> Option<SV> {
         if self.rv_ok() {
             Some(unsafe { SV::from_raw_borrowed(self.pthx(), self.deref_raw()) })
@@ -132,6 +135,7 @@ impl SV {
     /// Dereference RV into AV.
     ///
     /// Return `None` if `self` is not an array reference.
+    #[inline]
     pub fn deref_av(&self) -> Option<AV> {
         self.deref().and_then(|sv| sv.into_av())
     }
@@ -139,11 +143,13 @@ impl SV {
     /// Dereference RV into HV.
     ///
     /// Return `None` if `self` is not a hash reference.
+    #[inline]
     pub fn deref_hv(&self) -> Option<HV> {
         self.deref().and_then(|sv| sv.into_hv())
     }
 
     /// Cast SV into AV.
+    #[inline]
     pub fn into_av(self) -> Option<AV> {
         if self.is_array() {
             Some(unsafe { AV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
@@ -153,6 +159,7 @@ impl SV {
     }
 
     /// Cast SV into HV.
+    #[inline]
     pub fn into_hv(self) -> Option<HV> {
         if self.is_hash() {
             Some(unsafe { HV::from_raw_owned(self.pthx(), self.into_raw() as *mut _) })
@@ -165,6 +172,7 @@ impl SV {
     ///
     /// Does not decrement reference count. Returned pointer must be correctly disposed of to avoid
     /// memory leaks.
+    #[inline]
     pub fn into_raw(self) -> *mut raw::SV {
         let raw = self.0.as_ptr();
         mem::forget(self);
@@ -175,6 +183,7 @@ impl SV {
     ///
     /// Owned SV pointers are returned by assorted
     /// [`newSV`](http://perldoc.perl.org/perlapi.html#newSV) functions.
+    #[inline]
     pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV(Owned::from_raw_owned(pthx, raw))
     }
@@ -184,6 +193,7 @@ impl SV {
     /// Borrowed SV pointers exist on stack and are returned by functions like
     /// [`av_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch) or
     /// [`hv_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch).
+    #[inline]
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV(Owned::from_raw_borrowed(pthx, raw))
     }
@@ -194,48 +204,56 @@ impl SV {
 }
 
 impl FromSV for IV {
+    #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> IV {
         pthx.sv_iv(raw)
     }
 }
 
 impl FromSV for UV {
+    #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> UV {
         pthx.sv_uv(raw)
     }
 }
 
 impl FromSV for NV {
+    #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> NV {
         pthx.sv_nv(raw)
     }
 }
 
 impl FromSV for SV {
+    #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV::from_raw_borrowed(pthx, raw)
     }
 }
 
 impl IntoSV for IV {
+    #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe { SV::from_raw_owned(pthx, pthx.new_sv_iv(self)) }
     }
 }
 
 impl IntoSV for UV {
+    #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe { SV::from_raw_owned(pthx, pthx.new_sv_uv(self)) }
     }
 }
 
 impl IntoSV for NV {
+    #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe { SV::from_raw_owned(pthx, pthx.new_sv_nv(self)) }
     }
 }
 
 impl IntoSV for bool {
+    #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {
             let raw = if self { pthx.sv_yes() } else { pthx.sv_no() };
@@ -245,6 +263,7 @@ impl IntoSV for bool {
 }
 
 impl<'a> IntoSV for &'a str {
+    #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {
             let svp = pthx.new_sv_pvn(self.as_ptr() as *const i8,
@@ -256,6 +275,7 @@ impl<'a> IntoSV for &'a str {
 }
 
 impl IntoSV for SV {
+    #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         assert!(self.pthx() == pthx);
         self
@@ -263,6 +283,7 @@ impl IntoSV for SV {
 }
 
 impl IntoSV for () {
+    #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {
             let svp = pthx.new_sv(0);

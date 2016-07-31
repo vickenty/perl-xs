@@ -31,6 +31,7 @@ impl Context {
     /// extension API does not allow such exceptions to be handled by the programmer (see paragraph
     /// on [Exception Handling](http://perldoc.perl.org/perlguts.html#Exception-Handling) in the
     /// Perl documentation).
+    #[inline]
     pub fn wrap<F>(pthx: raw::PerlThreadContext, f: F)
         where F: FnOnce(&mut Self) + std::panic::UnwindSafe
     {
@@ -53,6 +54,7 @@ impl Context {
     // STACK
 
     /// Rewind stack pointer to the base of current frame.
+    #[inline]
     pub fn st_prepush(&mut self) {
         unsafe { self.pthx.stack_prepush(&mut self.stack) };
     }
@@ -60,6 +62,7 @@ impl Context {
     /// Copy local stack pointer back to Perl.
     ///
     /// See: [`PUTBACK`](http://perldoc.perl.org/perlapi.html#PUTBACK).
+    #[inline]
     pub fn st_putback(&mut self) {
         unsafe { self.pthx.stack_putback(&mut self.stack) };
     }
@@ -67,6 +70,7 @@ impl Context {
     /// Return number of items on the argument stack.
     ///
     /// [`items`](http://perldoc.perl.org/perlapi.html#items).
+    #[inline]
     pub fn st_items(&mut self) -> isize {
         unsafe { self.pthx.stack_items(&mut self.stack) as isize }
     }
@@ -74,6 +78,7 @@ impl Context {
     /// Fetch value from the Perl stack.
     ///
     /// See: [`ST`](http://perldoc.perl.org/perlapi.html#ST).
+    #[inline]
     pub fn st_fetch<T>(&mut self, idx: isize) -> T where T: FromSV
     {
         if idx >= self.st_items() {
@@ -86,6 +91,7 @@ impl Context {
     /// Push value onto Perl stack.
     ///
     /// See: [`mXPUSHs`](http://perldoc.perl.org/perlapi.html#mXPUSHs).
+    #[inline]
     pub fn st_push<T>(&mut self, val: T) where T: IntoSV {
         let sv = val.into_sv(self.pthx);
         unsafe { self.pthx.stack_xpush_sv_mortal(&mut self.stack, sv.into_raw()) };
@@ -96,6 +102,7 @@ impl Context {
     /// Register new Perl xsub.
     ///
     /// See: [`newXS`](http://perldoc.perl.org/perlapi.html#newXS).
+    #[inline]
     pub fn new_xs(&mut self, name: &CStr, xsaddr: raw::XSUBADDR_t) {
         unsafe { self.pthx.new_xs(name.as_ptr(), xsaddr, EMPTY.as_ptr()) };
     }
@@ -105,6 +112,7 @@ impl Context {
     /// Return the AV of the specified Perl global or package array.
     ///
     /// See: [`get_av`](http://perldoc.perl.org/perlapi.html#get_av).
+    #[inline]
     pub fn get_av(&mut self, name: &CStr) -> Option<AV> {
         let avp = unsafe { self.pthx.get_av(name.as_ptr(), 0) };
         if avp.is_null() {
@@ -117,6 +125,7 @@ impl Context {
     /// Call subroutine by name.
     ///
     /// See: [`call_pv`](http://perldoc.perl.org/perlapi.html#call_pv).
+    #[inline]
     pub fn call_pv(&mut self, name: &CStr, flags: IV) {
         unsafe { self.pthx.call_pv(name.as_ptr(), flags as raw::I32) };
     }
@@ -124,6 +133,7 @@ impl Context {
     // SCALARS
 
     /// Allocate new SV of type appropriate to store `T`
+    #[inline]
     pub fn new_sv<T>(&mut self, val: T) -> SV where T: IntoSV {
         val.into_sv(self.pthx)
     }

@@ -99,6 +99,7 @@ impl AV {
     /// Set array element at index `key` to `val`.
     ///
     /// See [`av_store`](http://perldoc.perl.org/perlapi.html#av_store).
+    #[inline]
     pub fn store(&self, key: SSize_t, val: SV) {
         unsafe {
             let raw = val.into_raw();
@@ -109,12 +110,14 @@ impl AV {
 
     /// Construct new AV from a raw pointer without incrementing reference counter (raw pointer
     /// already "owns" one incref).
+    #[inline]
     pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
         AV(Owned::from_raw_owned(pthx, raw))
     }
 
     /// Construct new AV from a raw pointer and increment its reference counter (raw pointer is
     /// "borrowed" from another structure that owns one incref).
+    #[inline]
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
         AV(Owned::from_raw_borrowed(pthx, raw))
     }

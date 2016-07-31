@@ -65,6 +65,7 @@ impl HV {
     /// Stores an SV in a hash.
     ///
     /// See [`hv_store`](http://perldoc.perl.org/perlapi.html#hv_store).
+    #[inline]
     pub fn store(&self, key: &str, val: SV) {
         unsafe {
             let raw = val.into_raw();
@@ -75,12 +76,14 @@ impl HV {
 
     /// Construct new HV from a raw pointer without incrementing reference counter (raw pointer
     /// already "owns" one incref).
+    #[inline]
     pub unsafe fn from_raw_owned(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
         HV(Owned::from_raw_owned(pthx, raw))
     }
 
     /// Construct new HV from a raw pointer and increment its reference counter (raw pointer is
     /// "borrowed" from another structure that owns one incref).
+    #[inline]
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
         HV(Owned::from_raw_borrowed(pthx, raw))
     }

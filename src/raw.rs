@@ -1,6 +1,5 @@
 //! Minimal wrapper around internal Perl API.
 
-use std::ptr;
 use std::mem;
 use std::any;
 use std::panic;
@@ -69,7 +68,7 @@ impl Interpreter {
         }
 
         if let Some(&msg) = e.downcast_ref::<&str>() {
-            let cmsg = match CString::new(msg) {
+            match CString::new(msg) {
                 Ok(cmsg) => pthx!(croak(self.0, cmsg.as_ptr() as *const c_char)),
                 Err(_) => pthx!(croak(self.0, b"unrepresentable error: null byte inside string\0".as_ptr() as *const c_char)),
             };

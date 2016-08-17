@@ -1,0 +1,10 @@
+META.*
+MYMETA.*
+Cargo.toml
+blib
+inc
+pm_to_blib
+rs/Makefile
+xs/Makefile
+xs/*.[co]
+xs/*.bs

@@ -35,15 +35,13 @@ under `t` directory.
 
 - Perl 5.20+ (for 64-bit array methods)
 - Rust 1.9+ (for `catch_unwind`)
-- `Module::Install::Rust`
-- `Ouroboros`
 
 ## Testing
 
-To install packages required for testing:
+To install packages required for testing and benchmarking:
 
 ```shell
-(cd t && cpanm --installdeps .)
+cpanm --installdeps .
 ```
 
 To run tests:

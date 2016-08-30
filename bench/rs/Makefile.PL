@@ -9,6 +9,7 @@ requires "XSLoader" => 0;
 
 rust_use_perl_xs { path => "../.." };
 rust_requires "perl-sys" => { path => "../../../perl-sys" };
+rust_profile release => { lto => \"1" };
 rust_write;
 
 WriteAll;

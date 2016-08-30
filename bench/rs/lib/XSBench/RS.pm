@@ -4,7 +4,7 @@ use warnings;
 use XSLoader;
 use Exporter "import";
 
-our @EXPORT = qw/rs_sum rs_gcd/;
+our @EXPORT = qw/rs_sum_loop rs_sum_iter rs_gcd/;
 
 XSLoader::load();
 

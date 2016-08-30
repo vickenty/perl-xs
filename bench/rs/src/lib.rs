@@ -3,12 +3,12 @@ extern crate perl_xs;
 #[macro_use]
 extern crate perl_sys;
 
-use perl_xs::{ SV, AV, IV };
+use perl_xs::{ SV, AV, IV, NV };
 
 xs! {
     package XSBench::RS;
     
-    sub rs_sum(ctx) {
+    sub rs_sum_loop(ctx) {
         let param: SV = ctx.st_fetch(0);
         let array: AV = param.deref_av().expect("not an array ref");
         let mut sum = 0.0;
@@ -17,6 +17,13 @@ xs! {
                 sum += val;
             }
         }
+        xs_return!(ctx, sum);
+    }
+
+    sub rs_sum_iter(ctx) {
+        let param: SV = ctx.st_fetch(0);
+        let array: AV = param.deref_av().expect("not an array ref");
+        let sum: NV = array.iter().map(|v| v.unwrap_or(0.0)).sum();
         xs_return!(ctx, sum);
     }
 

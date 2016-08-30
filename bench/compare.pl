@@ -5,7 +5,7 @@ use blib "xs/blib";
 use blib "rs/blib";
 
 use XSBench::XS qw/xs_sum xs_gcd/;
-use XSBench::RS qw/rs_sum rs_gcd/;
+use XSBench::RS qw/rs_sum_loop rs_sum_iter rs_gcd/;
 use Dumbbench;
 
 sub bench {
@@ -45,24 +45,34 @@ sub pp_gcd {
     return $a < 0 ? -$a : $a;
 }
 
-my ($pp, $xs, $rs);
+sub bench_sum {
+    my ($pp, $xs, $rs_loop, $rs_iter);
 
-my $specimen = [ 1 .. 50_000_000 ];
+    my $specimen = [ 1 .. 30_000_000 ];
 
-bench(
-    pp => sub { $pp = pp_sum($specimen) },
-    xs => sub { $xs = xs_sum($specimen) },
-    rs => sub { $rs = rs_sum($specimen) },
-);
+    bench(
+        pp => sub { $pp = pp_sum($specimen) },
+        xs => sub { $xs = xs_sum($specimen) },
+        rs_loop => sub { $rs_loop = rs_sum_loop($specimen) },
+        rs_iter => sub { $rs_iter = rs_sum_iter($specimen) },
+    );
 
-print "pp=$pp, xs=$xs, rs=$rs\n";
+    print "pp=$pp, xs=$xs, rs_loop=$rs_loop, rs_iter=$rs_iter\n";
+}
 
-my $a = 4_000_000_000_000;
-my $b = 3_984_589_159_111;
+sub bench_gcd {
+    my $a = 4_000_000_000_000;
+    my $b = 3_984_589_159_111;
 
-bench(
-    pp => sub { $pp = pp_gcd($a, $b) for 0..200000 },
-    xs => sub { $xs = xs_gcd($a, $b) for 0..200000 },
-    rs => sub { $rs = rs_gcd($a, $b) for 0..200000 },
-);
-print "pp=$pp, xs=$xs, rs=$rs\n";
+    my ($pp, $xs, $rs);
+
+    bench(
+        pp => sub { $pp = pp_gcd($a, $b) for 0..200000 },
+        xs => sub { $xs = xs_gcd($a, $b) for 0..200000 },
+        rs => sub { $rs = rs_gcd($a, $b) for 0..200000 },
+    );
+    print "pp=$pp, xs=$xs, rs=$rs\n";
+}
+
+bench_sum();
+bench_gcd();

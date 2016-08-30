@@ -1,7 +1,10 @@
+use std::marker::PhantomData;
+
 use handle::Owned;
 use raw;
 use raw::{ SSize_t };
 use SV;
+use convert::FromSV;
 
 /// Perl array object.
 pub struct AV(Owned<raw::AV>);
@@ -120,5 +123,43 @@ impl AV {
     #[inline]
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::AV) -> AV {
         AV(Owned::from_raw_borrowed(pthx, raw))
+    }
+
+    /// Get an iterator over the array.
+    #[inline]
+    pub fn iter<T: FromSV>(&self) -> IterAV<T> {
+        IterAV::new(self)
+    }
+}
+
+pub struct IterAV<'a, T> {
+    av: &'a AV,
+    pos: SSize_t,
+    top: SSize_t,
+    ty: PhantomData<T>,
+}
+
+impl<'a, T> IterAV<'a, T> {
+    fn new(av: &'a AV) -> Self {
+        IterAV {
+            pos: 0,
+            top: av.top_index(),
+            av: av,
+            ty: PhantomData,
+        }
+    }
+}
+
+impl<'a, T: FromSV> Iterator for IterAV<'a, T> {
+    type Item = Option<T>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.pos <= self.top {
+            let v = self.av.fetch(self.pos);
+            self.pos += 1;
+            Some(v)
+        } else {
+            None
+        }
     }
 }

@@ -34,7 +34,7 @@ under `t` directory.
 ## Prerequisites
 
 - Perl 5.20+ (for 64-bit array methods)
-- Rust 1.9+ (for `catch_unwind`)
+- Rust 1.11+ (`catch_unwind`, `cdylib`)
 
 ## Testing
 

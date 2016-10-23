@@ -5,7 +5,8 @@ use std::any;
 use std::panic;
 use std::ffi::CString;
 use std::os::raw::{ c_int, c_char };
-use perl_sys::funcs::*;
+
+use perl_sys::fn_wrappers::*;
 
 pub use perl_sys::types::*;
 pub use perl_sys::consts::*;

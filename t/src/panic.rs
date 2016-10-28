@@ -1,23 +1,23 @@
 use perl_xs::IV;
 use perl_xs::G_DISCARD;
 
-static mut counter: IV = 0;
+static mut COUNTER: IV = 0;
 
 struct Cnt;
 
 impl Cnt {
     fn new() -> Cnt {
-        unsafe { counter = 0 };
+        unsafe { COUNTER = 0 };
         Cnt
     }
     fn get() -> IV {
-        unsafe { counter }
+        unsafe { COUNTER }
     }
 }
 
 impl Drop for Cnt {
     fn drop(&mut self) {
-        unsafe { counter += 1 };
+        unsafe { COUNTER += 1 };
     }
 }
 

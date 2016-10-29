@@ -2,6 +2,7 @@
 name = "perl-xs"
 version = "0.1.0"
 authors = ["Vickenty Fesunov <kent@setattr.net>"]
+license = "BSD-2-Clause"
 
 [dependencies]
 perl-sys = { path = "../perl-sys" }

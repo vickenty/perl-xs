@@ -114,7 +114,7 @@ impl Interpreter {
     method! { fn sv_pok(arg0: *mut SV) -> U32 = ouroboros_sv_pok }
     method! { fn sv_rok(arg0: *mut SV) -> U32 = ouroboros_sv_rok }
     method! { fn sv_rv(arg0: *mut SV) -> *mut SV = ouroboros_sv_rv }
-    method! { fn sv_type(arg0: *mut SV) -> IV = ouroboros_sv_type }
+    method! { fn sv_type(arg0: *mut SV) -> svtype = ouroboros_sv_type }
     method! { fn gv_sv(arg0: *mut GV) -> *mut SV = ouroboros_gv_sv }
     method! { fn gv_av(arg0: *mut GV) -> *mut AV = ouroboros_gv_av }
     method! { fn gv_hv(arg0: *mut GV) -> *mut HV = ouroboros_gv_hv }

@@ -76,6 +76,10 @@ impl Interpreter {
             errsv = self.make_error_sv(msg);
         }
 
+        if let Some(msg) = e.downcast_ref::<String>() {
+            errsv = self.make_error_sv(msg);
+        }
+
         mem::drop(e);
 
         if !errsv.is_null() {

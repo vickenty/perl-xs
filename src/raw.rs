@@ -3,7 +3,6 @@
 use std::mem;
 use std::any;
 use std::panic;
-use std::ffi::CString;
 use std::os::raw::{ c_int, c_char };
 
 use perl_sys::fn_wrappers::*;
@@ -63,22 +62,50 @@ impl Interpreter {
     }
 
     unsafe fn rethrow_panic(&self, e: Box<any::Any>) -> ! {
+        use std::mem;
+        use std::ptr;
+
         if let Some(&Xcpt(rc)) = e.downcast_ref() {
-            pthx!(ouroboros_xcpt_rethrow(self.0, rc));
-            unreachable!();
+            mem::drop(e);
+            self.rethrow_xcpt(rc);
         }
 
+        let mut errsv: *mut SV = ptr::null_mut();
+
         if let Some(&msg) = e.downcast_ref::<&str>() {
-            match CString::new(msg) {
-                Ok(cmsg) => pthx!(croak(self.0, cmsg.as_ptr() as *const c_char)),
-                Err(_) => pthx!(croak(self.0, b"unrepresentable error: null byte inside string\0".as_ptr() as *const c_char)),
-            };
-            unreachable!();
+            errsv = self.make_error_sv(msg);
+        }
+
+        mem::drop(e);
+
+        if !errsv.is_null() {
+            self.croak_sv(errsv);
         }
 
         let msg = b"unknown typed panic inside Rust code\0";
         pthx!(croak(self.0, msg.as_ptr() as *const c_char));
         unreachable!();
+    }
+
+    unsafe fn croak_sv(&self, sv: *mut SV) -> ! {
+        use perl_sys::fn_bindings::croak_sv;
+        pthx!(croak_sv(self.0, sv));
+        unreachable!();
+    }
+
+    unsafe fn rethrow_xcpt(&self, rc: c_int) -> ! {
+        pthx!(ouroboros_xcpt_rethrow(self.0, rc));
+        unreachable!();
+    }
+
+    unsafe fn make_error_sv<T>(&self, e: T) -> *mut SV where T: AsRef<str> {
+        use perl_sys::fn_bindings::newSVpvn_flags;
+        let s = e.as_ref();
+        pthx!(newSVpvn_flags(
+            self.0,
+            s.as_ptr() as *const _,
+            s.len() as STRLEN,
+            SVs_TEMP | SVf_UTF8))
     }
 
     method! { fn stack_init(arg0: *mut Stack) = ouroboros_stack_init }

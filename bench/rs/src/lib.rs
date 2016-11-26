@@ -8,8 +8,7 @@ use perl_xs::{ SV, AV, IV, NV };
 xs! {
     package XSBench::RS;
     
-    sub rs_sum_loop(ctx) {
-        let param: SV = ctx.st_fetch(0);
+    sub rs_sum_loop(ctx, param: SV) {
         let array: AV = param.deref_av().expect("not an array ref");
         let mut sum = 0.0;
         for i in 0..array.top_index() + 1 {
@@ -20,16 +19,15 @@ xs! {
         xs_return!(ctx, sum);
     }
 
-    sub rs_sum_iter(ctx) {
-        let param: SV = ctx.st_fetch(0);
+    sub rs_sum_iter(ctx, param: SV) {
         let array: AV = param.deref_av().expect("not an array ref");
         let sum: NV = array.iter().map(|v| v.unwrap_or(0.0)).sum();
         xs_return!(ctx, sum);
     }
 
-    sub rs_gcd(ctx) {
-        let mut a = ctx.st_fetch::<IV>(0);
-        let mut b = ctx.st_fetch::<IV>(1);
+    sub rs_gcd(ctx, a: IV, b: IV) {
+        let mut a = a;
+        let mut b = b;
         while b > 0 {
             let t = a;
             a = b;

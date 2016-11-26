@@ -3,8 +3,7 @@ use perl_xs::{ IV, NV, SV };
 xs! {
     package XSTest;
 
-    sub test_sv_ok(ctx) {
-        let sv: SV = ctx.st_fetch(0);
+    sub test_sv_ok(ctx, sv: SV) {
         xs_return!(ctx,
             sv.ok(),
             sv.iv_ok(),
@@ -14,8 +13,8 @@ xs! {
             sv.rv_ok());
     }
 
-    sub test_sv_type(ctx) {
-        let sv: SV = ctx.st_fetch::<SV>(0).deref().unwrap();
+    sub test_sv_type(ctx, rv: SV) {
+        let sv: SV = rv.deref().unwrap();
         xs_return!(ctx,
                    sv.is_scalar(),
                    sv.is_array(),
@@ -24,8 +23,7 @@ xs! {
                    sv.is_glob());
     }
 
-    sub test_unicode(ctx) {
-        let sv: SV = ctx.st_fetch(0);
+    sub test_unicode(ctx, sv: SV) {
         let utf8: IV = if sv.utf8() { 1 } else { 0 };
 
         match sv.str() {
@@ -34,14 +32,12 @@ xs! {
         }
     }
 
-    sub test_new_sv_iv(ctx) {
-        let iv: IV = ctx.st_fetch(0);
+    sub test_new_sv_iv(ctx, iv: IV) {
         let sv = ctx.new_sv(iv);
         xs_return!(ctx, sv);
     }
 
-    sub test_new_sv_nv(ctx) {
-        let nv: NV = ctx.st_fetch(0);
+    sub test_new_sv_nv(ctx, nv: NV) {
         let sv = ctx.new_sv(nv);
         xs_return!(ctx, sv);
     }

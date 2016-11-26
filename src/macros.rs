@@ -43,12 +43,24 @@ macro_rules! xs_return {
 macro_rules! xs {
     (
         package $pkg:path ;
-        $( sub $name:ident ($ctx:ident) $body:block )*
+        $( sub $name:ident ($ctx:ident $(, $par:ident : $pty:ty )* ) $body:block )*
     ) => (
         $(
             pthx! {
                 fn $name (pthx, _cv: *mut $crate::raw::CV) {
-                    $crate::context::Context::wrap(pthx, |$ctx| $body);
+                    $crate::context::Context::wrap(pthx, |$ctx| {
+                        let mut _arg = 0;
+                        $(
+                            let $par = $ctx.st_fetch::<$pty>(_arg).expect(
+                                concat!(
+                                    "not enough arguments for ",
+                                    stringify!($pkg),
+                                    "::",
+                                    stringify!($name)));
+                            _arg += 1;
+                        )*
+                        $body
+                    });
                 }
             }
         )*

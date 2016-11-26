@@ -79,13 +79,17 @@ impl Context {
     ///
     /// See: [`ST`](http://perldoc.perl.org/perlapi.html#ST).
     #[inline]
-    pub fn st_fetch<T>(&mut self, idx: isize) -> T where T: FromSV
+    pub fn st_fetch<T>(&mut self, idx: isize) -> Option<T> where T: FromSV
     {
         if idx >= self.st_items() {
-            panic!("too few items on stack");
+            return None;
         }
         let svp = unsafe { self.pthx.stack_fetch(&mut self.stack, idx as raw::SSize_t) };
-        unsafe { T::from_sv(self.pthx, svp) }
+        if svp.is_null() {
+            return None;
+        }
+
+        Some(unsafe { T::from_sv(self.pthx, svp) })
     }
 
     /// Push value onto Perl stack.

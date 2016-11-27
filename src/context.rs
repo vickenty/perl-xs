@@ -2,7 +2,7 @@
 use std;
 use raw;
 use { AV, SV };
-use convert::{ FromSV, IntoSV };
+use convert::{ FromSV, IntoSV, TryFromSV };
 use std::ffi::CStr;
 
 /// XS call context.
@@ -75,21 +75,37 @@ impl Context {
         unsafe { self.pthx.stack_items(&mut self.stack) as isize }
     }
 
+    unsafe fn st_fetch_raw(&mut self, idx: isize) -> Option<*mut raw::SV> {
+        if idx >= self.st_items() {
+            return None;
+        }
+        let svp = self.pthx.stack_fetch(&mut self.stack, idx as raw::SSize_t);
+        if svp.is_null() {
+            return None;
+        }
+
+        Some(svp)
+    }
+
     /// Fetch value from the Perl stack.
     ///
     /// See: [`ST`](http://perldoc.perl.org/perlapi.html#ST).
     #[inline]
     pub fn st_fetch<T>(&mut self, idx: isize) -> Option<T> where T: FromSV
     {
-        if idx >= self.st_items() {
-            return None;
+        unsafe {
+            self.st_fetch_raw(idx).map(|svp| T::from_sv(self.pthx, svp))
         }
-        let svp = unsafe { self.pthx.stack_fetch(&mut self.stack, idx as raw::SSize_t) };
-        if svp.is_null() {
-            return None;
-        }
+    }
 
-        Some(unsafe { T::from_sv(self.pthx, svp) })
+    /// Fetch value from the Perl stack and try to convert to `T`.
+    #[inline]
+    pub fn st_try_fetch<T>(&mut self,idx: isize) -> Option<Result<T, T::Error>>
+        where T: TryFromSV
+    {
+        unsafe {
+            self.st_fetch_raw(idx).map(|svp| T::try_from_sv(self.pthx, svp))
+        }
     }
 
     /// Push value onto Perl stack.

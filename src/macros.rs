@@ -51,12 +51,27 @@ macro_rules! xs {
                     $crate::context::Context::wrap(pthx, |$ctx| {
                         let mut _arg = 0;
                         $(
-                            let $par = $ctx.st_fetch::<$pty>(_arg).expect(
-                                concat!(
-                                    "not enough arguments for ",
-                                    stringify!($pkg),
-                                    "::",
-                                    stringify!($name)));
+                            let $par = match $ctx.st_try_fetch::<$pty>(_arg) {
+                                Some(Ok(v)) => v,
+                                Some(Err(e)) =>
+                                    panic!(
+                                        concat!(
+                                            "invalid argument '",
+                                            stringify!($par),
+                                            "' for ",
+                                            stringify!($pkg),
+                                            "::",
+                                            stringify!($name),
+                                            ": {}"),
+                                        e),
+                                None =>
+                                    panic!(
+                                        concat!(
+                                            "not enough arguments for ",
+                                            stringify!($pkg),
+                                            "::",
+                                            stringify!($name))),
+                            };
                             _arg += 1;
                         )*
                         $body

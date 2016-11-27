@@ -9,8 +9,7 @@ xs! {
         }
     }
 
-    sub test_fetch(ctx, rv: SV) {
-        let av: AV = rv.deref_av().expect("an array reference");
+    sub test_fetch(ctx, av: AV) {
         let rc: IV = match av.fetch::<SV>(0) {
             Some(ref sv) if sv.ok() => 1,
             Some(_) => 2,

@@ -4,7 +4,7 @@ use handle::Owned;
 use raw;
 use raw::{ SSize_t };
 use SV;
-use convert::FromSV;
+use convert::{ FromSV, TryFromSV };
 
 /// Perl array object.
 pub struct AV(Owned<raw::AV>);
@@ -129,6 +129,17 @@ impl AV {
     #[inline]
     pub fn iter<T: FromSV>(&self) -> IterAV<T> {
         IterAV::new(self)
+    }
+}
+
+impl TryFromSV for AV {
+    type Error = &'static str;
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<AV, Self::Error> {
+        if pthx.sv_rok(raw) == 0 {
+            return Err("not an array reference");
+        }
+
+        Ok(AV::from_raw_borrowed(pthx, pthx.sv_rv(raw) as *mut _))
     }
 }
 

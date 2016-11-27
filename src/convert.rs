@@ -1,5 +1,6 @@
 //! Traits for converting to and from Perl scalars.
 
+use std::fmt::Display;
 use raw;
 use SV;
 
@@ -13,4 +14,20 @@ pub trait FromSV {
 pub trait IntoSV {
     /// Perform the conversion.
     fn into_sv(self, pthx: raw::Interpreter) -> SV;
+}
+
+/// Attempt unsafe conversion from a raw SV pointer.
+pub trait TryFromSV: Sized {
+    /// The type returned in the event of a conversion error.
+    type Error: Display;
+    /// Perform the conversion.
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<Self, Self::Error>;
+}
+
+impl<T> TryFromSV for T where T: FromSV {
+    type Error = &'static str;
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<T, Self::Error>
+    {
+        Ok(T::from_sv(pthx, raw))
+    }
 }

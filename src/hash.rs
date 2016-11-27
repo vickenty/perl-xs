@@ -1,4 +1,5 @@
 use handle::Owned;
+use convert::{ TryFromSV };
 use raw;
 use SV;
 
@@ -86,5 +87,17 @@ impl HV {
     #[inline]
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
         HV(Owned::from_raw_borrowed(pthx, raw))
+    }
+}
+
+impl TryFromSV for HV {
+    type Error = &'static str;
+
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<HV, Self::Error> {
+        if pthx.sv_rok(raw) == 0 {
+            return Err("not a hash reference");
+        }
+
+        Ok(HV::from_raw_borrowed(pthx, pthx.sv_rv(raw) as *mut _))
     }
 }

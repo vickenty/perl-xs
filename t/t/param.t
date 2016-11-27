@@ -8,6 +8,7 @@ require_ok("XSTest");
 
 like exception { XSTest::Param::add() }, qr/not enough arguments/, "dies with no args";
 like exception { XSTest::Param::add(1) }, qr/not enough arguments/, "dies with one arg";
+like exception { XSTest::Param::len(1) }, qr/invalid argument/, "dies with invalid arg";
 
 sub test {
     my ($a, $b, $exp, $exp_warn, $name) = @_;

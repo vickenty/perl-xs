@@ -2,6 +2,19 @@
 
 High-level Rust bindings to Perl XS API.
 
+## Example
+
+```rust
+xs! {
+  package Array::Sum;
+  sub sum_array(ctx, array: AV) -> NV {
+    array.iter().map(|it| it.unwrap_or(0.0)).sum()
+  }
+}
+```
+
+For a more complete example see the XSTest package in the `t/` directory.
+
 ## Goals
 
 - safety

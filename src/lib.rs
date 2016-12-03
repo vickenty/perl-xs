@@ -20,6 +20,9 @@ mod hash;
 pub mod context;
 pub mod convert;
 
+#[doc(hidden)]
+pub mod croak;
+
 pub use raw::{ IV, UV, NV, Size_t, SSize_t, STRLEN };
 pub use raw::{ G_DISCARD, G_VOID };
 pub use scalar::SV;

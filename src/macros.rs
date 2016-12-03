@@ -54,7 +54,7 @@ macro_rules! xs {
                             let $par = match $ctx.st_try_fetch::<$pty>(_arg) {
                                 Some(Ok(v)) => v,
                                 Some(Err(e)) =>
-                                    panic!(
+                                    croak!(
                                         concat!(
                                             "invalid argument '",
                                             stringify!($par),
@@ -65,7 +65,7 @@ macro_rules! xs {
                                             ": {}"),
                                         e),
                                 None =>
-                                    panic!(
+                                    croak!(
                                         concat!(
                                             "not enough arguments for ",
                                             stringify!($pkg),
@@ -116,4 +116,25 @@ macro_rules! xs {
 #[macro_export]
 macro_rules! cstr {
     ($e:expr) => (&::std::ffi::CString::new($e).unwrap())
+}
+
+/// Throw a perl exception.
+///
+/// Perl exceptions are implemented as panics in Rust, but do not call the panic hook - user
+/// programs may handle the exception, in which case the panic message printed by the hook may be an
+/// unwelcome interruption.
+///
+/// The single argument form can throw any kind of object, although only `String` and `&str` will be
+/// passed to perl.
+///
+/// The multi-argument form throws a string formatted using the standard formatting syntax.
+#[macro_export]
+macro_rules! croak {
+    ($msg:expr) => ({
+        $crate::croak::croak($msg)
+    });
+
+    ($fmt:expr, $($arg:tt)*) => ({
+        $crate::croak::croak_fmt(&format_args!($fmt, $($arg)*))
+    });
 }

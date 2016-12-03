@@ -26,7 +26,7 @@ xs! {
 
     sub test_panic(_ctx) {
         let _cnt = Cnt::new();
-        panic!("Panic!\n");
+        croak!("Panic!\n");
     }
 
     sub test_croak(ctx) {

@@ -30,7 +30,7 @@ macro_rules! method {
         pub unsafe fn $name ( &self, $( $pname : $ptype ),* ) {
             let rc: c_int = pthx!( $imp ( self.0, $( $pname ),* ));
             if rc != 0 {
-                panic!(Xcpt(rc));
+                croak!(Xcpt(rc));
             }
         }
     );
@@ -43,7 +43,7 @@ macro_rules! method {
             let mut rv: $rtype = mem::zeroed();
             let rc: c_int = pthx!( $imp ( self.0, &mut rv, $( $pname ),* ));
             if rc != 0 {
-                panic!(Xcpt(rc));
+                croak!(Xcpt(rc));
             }
             rv
         }

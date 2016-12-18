@@ -192,7 +192,7 @@ impl SV {
     ///
     /// Borrowed SV pointers exist on stack and are returned by functions like
     /// [`av_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch) or
-    /// [`hv_fetch`](http://perldoc.perl.org/perlapi.html#av_fetch).
+    /// [`hv_fetch`](http://perldoc.perl.org/perlapi.html#hv_fetch).
     #[inline]
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV(Owned::from_raw_borrowed(pthx, raw))

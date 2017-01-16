@@ -10,6 +10,7 @@ NV xs_sum(AV* array)
 	NV sum = 0;
 	SSize_t i, top = av_top_index(array);
 	CODE:
+	sv_2mortal(SvREFCNT_inc(array));
 	for (i = 0; i <= top; i++) {
 		SV **sv = av_fetch(array, i, 0);
 		if (sv != NULL) {

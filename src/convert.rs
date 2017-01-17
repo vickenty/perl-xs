@@ -16,6 +16,15 @@ pub trait IntoSV {
     fn into_sv(self, pthx: raw::Interpreter) -> SV;
 }
 
+impl<T> IntoSV for Option<T> where T: IntoSV {
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        match self {
+            Some(inner) => inner.into_sv(pthx),
+            None => unsafe { SV::from_raw_owned(pthx, pthx.sv_undef()) },
+        }
+    }
+}
+
 /// Attempt unsafe conversion from a raw SV pointer.
 pub trait TryFromSV: Sized {
     /// The type returned in the event of a conversion error.

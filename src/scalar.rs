@@ -262,6 +262,13 @@ impl IntoSV for bool {
     }
 }
 
+impl IntoSV for String {
+    #[inline]
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        (&self[..]).into_sv(pthx)
+    }
+}
+
 impl<'a> IntoSV for &'a str {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {

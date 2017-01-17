@@ -157,4 +157,9 @@ impl Context {
     pub fn new_sv<T>(&mut self, val: T) -> SV where T: IntoSV {
         val.into_sv(self.pthx)
     }
+
+    /// Return an undefined SV.
+    pub fn sv_undef(&mut self) -> SV {
+        unsafe { SV::from_raw_owned(self.pthx, self.pthx.sv_undef()) }
+    }
 }

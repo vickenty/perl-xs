@@ -11,4 +11,4 @@ requires "Test::Fatal";
 requires "Test::LeakTrace";
 
 # used by perl-sys crate
-requires "Ouroboros";
+requires "Ouroboros" => "0.12";

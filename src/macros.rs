@@ -1,18 +1,3 @@
-#[macro_export]
-macro_rules! xs_return {
-    ($ctx:ident) => {{
-        $ctx.st_prepush();
-        $ctx.st_putback();
-    }};
-
-    ($ctx:ident, $( $val:expr ),*) => {{
-        $ctx.st_prepush();
-        $( $ctx.st_push($val); )*
-        $ctx.st_putback();
-        return;
-    }}
-}
-
 /// Define Perl modules and packages.
 ///
 /// First form of this macro is used to define a Perl package inside a module. Each invocation
@@ -106,7 +91,7 @@ macro_rules! xs {
                         }
                     )*
 
-                    xs_return!(ctx, 1 as $crate::raw::IV);
+                    1 as $crate::raw::IV
                 });
             }
         }

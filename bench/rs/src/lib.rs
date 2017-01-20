@@ -15,12 +15,11 @@ xs! {
                 sum += val;
             }
         }
-        xs_return!(ctx, sum);
+        sum
     }
 
     sub rs_sum_iter(ctx, array: AV) {
-        let sum: NV = array.iter().map(|v| v.unwrap_or(0.0)).sum();
-        xs_return!(ctx, sum);
+        array.iter().map(|v| v.unwrap_or(0.0)).sum::<NV>()
     }
 
     sub rs_gcd(ctx, a: IV, b: IV) {
@@ -38,7 +37,7 @@ xs! {
             a
         };
 
-        xs_return!(ctx, res);
+        res
     }
 }
 

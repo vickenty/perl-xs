@@ -32,8 +32,9 @@ impl Context {
     /// on [Exception Handling](http://perldoc.perl.org/perlguts.html#Exception-Handling) in the
     /// Perl documentation).
     #[inline]
-    pub fn wrap<F>(pthx: raw::PerlThreadContext, f: F)
-        where F: FnOnce(&mut Self) + std::panic::UnwindSafe
+    pub fn wrap<R, F>(pthx: raw::PerlThreadContext, f: F)
+        where R: Stackable,
+              F: FnOnce(&mut Self) -> R + std::panic::UnwindSafe
     {
         unsafe {
             let perl = raw::Interpreter::new(pthx);
@@ -46,18 +47,16 @@ impl Context {
 
                 perl.stack_init(&mut ctx.stack);
 
-                f(&mut ctx)
+                let value = f(&mut ctx);
+
+                value.push_to(&mut ctx);
+
+                perl.stack_putback(&mut ctx.stack);
             });
         }
     }
 
     // STACK
-
-    /// Rewind stack pointer to the base of current frame.
-    #[inline]
-    pub fn st_prepush(&mut self) {
-        unsafe { self.pthx.stack_prepush(&mut self.stack) };
-    }
 
     /// Copy local stack pointer back to Perl.
     ///
@@ -163,3 +162,44 @@ impl Context {
         unsafe { SV::from_raw_owned(self.pthx, self.pthx.sv_undef()) }
     }
 }
+
+/// Push the value to the perl stack as one or more scalar values.
+///
+/// ```ignore
+/// // pushes one scalar
+/// "question".push_to(ctx);
+/// // pushes two scalars
+/// (42, "answer").push_to(ctx);
+/// ```
+pub trait Stackable {
+    /// Push self onto Perl stack as zero or more individual scalar values.
+    fn push_to(self, ctx: &mut Context);
+}
+
+impl<T> Stackable for T where T: IntoSV {
+    #[inline]
+    fn push_to(self, ctx: &mut Context) {
+        ctx.st_push(self);
+    }
+}
+
+macro_rules! impl_tuple {
+    (= [$($n:tt $i:tt)*] [$($tails:tt)*]) => (
+        impl<$($n: IntoSV),*> Stackable for ($($n,)*) {
+            #[inline]
+            #[allow(unused_variables)]
+            fn push_to(self, ctx: &mut Context) {
+                $( ctx.st_push(self.$i); )*
+            }
+        }
+        impl_tuple!(> [$($n $i)*] [$($tails)*]);
+    );
+
+    (> [$($heads:tt)*] [$n:tt $i:tt $($tails:tt)*]) => (
+        impl_tuple!(= [$($heads)* $n $i] [$($tails)*]);
+    );
+
+    (> [$($heads:tt)*] [] ) => ();
+}
+
+impl_tuple!(= [] [A 0 B 1 C 2 D 3 E 4 F 5 G 6 H 7 I 8 J 9]);

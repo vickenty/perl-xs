@@ -7,8 +7,8 @@ High-level Rust bindings to Perl XS API.
 ```rust
 xs! {
   package Array::Sum;
-  sub sum_array(ctx, array: AV) -> NV {
-    array.iter().map(|it| it.unwrap_or(0.0)).sum()
+  sub sum_array(ctx, array: AV) {
+    array.iter().map(|it| it.unwrap_or(0.0)).sum::<NV>()
   }
 }
 ```

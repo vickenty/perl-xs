@@ -4,10 +4,10 @@ xs! {
     package XSTest::Param;
 
     sub add(ctx, a: IV, b: IV) {
-        xs_return!(ctx, a + b);
+        a + b
     }
 
     sub len(ctx, a: AV) {
-        xs_return!(ctx, a.top_index() + 1);
+        a.top_index() + 1
     }
 }

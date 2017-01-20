@@ -114,7 +114,6 @@ impl Interpreter {
 
     method! { fn stack_init(arg0: *mut Stack) = ouroboros_stack_init }
     method! { fn stack_items(arg0: *mut Stack) -> c_int = ouroboros_stack_items }
-    method! { fn stack_prepush(arg0: *mut Stack) = ouroboros_stack_prepush }
     method! { fn stack_putback(arg0: *mut Stack) = ouroboros_stack_putback }
     method! { fn stack_fetch(arg0: *mut Stack, arg1: SSize_t) -> *mut SV = ouroboros_stack_fetch }
     method! { fn stack_store(arg0: *mut Stack, arg1: SSize_t, arg2: *mut SV) = ouroboros_stack_store }

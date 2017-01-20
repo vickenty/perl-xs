@@ -288,13 +288,3 @@ impl IntoSV for SV {
         self
     }
 }
-
-impl IntoSV for () {
-    #[inline]
-    fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe {
-            let svp = pthx.new_sv(0);
-            SV::from_raw_owned(pthx, svp)
-        }
-    }
-}

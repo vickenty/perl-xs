@@ -32,10 +32,10 @@ xs! {
     sub test_croak(ctx) {
         let _cnt = Cnt::new();
         ctx.call_pv(cstr!("XSTest::dies"), G_DISCARD);
-        xs_return!(ctx, 42 as IV);
+        42 as IV
     }
 
-    sub unwind_counter(ctx) {
-        xs_return!(ctx, Cnt::get());
+    sub unwind_counter(_ctx) {
+        Cnt::get()
     }
 }

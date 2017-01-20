@@ -10,11 +10,10 @@ xs! {
     }
 
     sub test_fetch(ctx, av: AV) {
-        let rc: IV = match av.fetch::<SV>(0) {
-            Some(ref sv) if sv.ok() => 1,
+        match av.fetch::<SV>(0) {
+            Some(ref sv) if sv.ok() => 1 as IV,
             Some(_) => 2,
             None => 3,
-        };
-        xs_return!(ctx, rc);
+        }
     }
 }

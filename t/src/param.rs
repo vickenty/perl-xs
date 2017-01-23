@@ -10,4 +10,8 @@ xs! {
     sub len(ctx, a: AV) {
         a.top_index() + 1
     }
+
+    sub strlen(ctx, s: String) {
+        s.chars().count() as IV
+    }
 }

@@ -1,3 +1,4 @@
+use std;
 use std::{ mem, slice, string };
 use handle::Owned;
 use raw;
@@ -5,7 +6,7 @@ use raw::{ IV, UV, NV };
 use raw::{ SVt_PVAV, SVt_PVHV, SVt_PVCV, SVt_PVGV };
 use array::{ AV };
 use hash::{ HV };
-use convert::{ IntoSV, FromSV };
+use convert::{ IntoSV, FromSV, TryFromSV };
 
 /// Perl scalar object.
 pub struct SV(Owned<raw::SV>);
@@ -228,6 +229,18 @@ impl FromSV for SV {
     #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> SV {
         SV::from_raw_borrowed(pthx, raw)
+    }
+}
+
+impl TryFromSV for String {
+    type Error = std::str::Utf8Error;
+
+    #[inline]
+    unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<Self, Self::Error> {
+        let mut len = 0;
+        let ptr = pthx.sv_pv(raw, &mut len);
+        let bytes = slice::from_raw_parts(ptr as *const u8, len as usize);
+        Ok(try!(std::str::from_utf8(bytes)).to_owned())
     }
 }
 

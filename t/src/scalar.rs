@@ -28,7 +28,7 @@ xs! {
     sub test_unicode(ctx, sv: SV) {
         let utf8: IV = if sv.utf8() { 1 } else { 0 };
 
-        match sv.str() {
+        match sv.to_string() {
             Ok(s) => (Some(s), utf8, -1 as IV),
             Err(e) => (None, utf8, e.utf8_error().valid_up_to() as IV),
         }

@@ -83,7 +83,7 @@ impl SV {
     method! {
         /// Return UTF8 flag on the SV.
         ///
-        /// You should use this after a call to `pv()` or `str()`, in case any call to string
+        /// You should use this after a call to `to_vec` or `to_string`, in case any call to string
         /// overloading updates the internal flag.
         ///
         /// Perl macro: [`SvUTF8`](http://perldoc.perl.org/perlapi.html#SvUTF8).
@@ -122,7 +122,7 @@ impl SV {
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     #[inline]
-    pub fn pv(&self) -> Vec<u8> {
+    pub fn to_vec(&self) -> Vec<u8> {
         unsafe {
             self.as_slice().to_owned()
         }
@@ -131,8 +131,9 @@ impl SV {
     /// Return a copy of string in the SV.
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
-    pub fn str(&self) -> Result<String, string::FromUtf8Error> {
-        String::from_utf8(self.pv())
+    #[inline]
+    pub fn to_string(&self) -> Result<String, string::FromUtf8Error> {
+        String::from_utf8(self.to_vec())
     }
 
     method! {

@@ -90,15 +90,41 @@ impl SV {
         simple fn utf8() -> bool = sv_utf8() != 0
     }
 
+    /// Get a slice of the internal string buffer of the SV.
+    ///
+    /// This method is unsafe, because the buffer may be changed, moved or freed by the interpreter
+    /// whenever this SV is accessed or modified. To be safe, code that uses this method should not
+    /// access interpreter context, this or any other perl value while the slice is in scope.
+    ///
+    /// For example, this use is okay:
+    ///
+    /// ```ignore
+    /// let chars = unsafe { sv.as_slice().chars().count() };
+    /// ```
+    ///
+    /// And this code may potentially access freed memory:
+    ///
+    /// ```ignore
+    /// let msg = unsafe { sv1.as_slice() };
+    /// let pos = sv2.iv();
+    /// println!("{}", &msg[pos..]);
+    /// ```
+    ///
+    /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
+    #[inline]
+    pub unsafe fn as_slice(&self) -> &[u8] {
+        let mut len = 0;
+        let ptr = self.pthx().sv_pv(self.as_ptr(), &mut len);
+        slice::from_raw_parts(ptr as *const u8, len as usize)
+    }
+
     /// Return a copy of string in the SV as a vector of bytes.
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     #[inline]
     pub fn pv(&self) -> Vec<u8> {
         unsafe {
-            let mut len = 0;
-            let ptr = self.pthx().sv_pv(self.as_ptr(), &mut len);
-            slice::from_raw_parts(ptr as *const u8, len as usize).to_owned()
+            self.as_slice().to_owned()
         }
     }
 

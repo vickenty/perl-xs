@@ -336,3 +336,11 @@ impl IntoSV for SV {
         self
     }
 }
+
+impl<'a> IntoSV for &'a SV {
+    #[inline]
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        assert!(self.pthx() == pthx);
+        self.clone()
+    }
+}

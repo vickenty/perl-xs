@@ -231,6 +231,14 @@ impl SV {
     fn as_ptr(&self) -> *mut raw::SV { self.0.as_ptr() }
 }
 
+impl Clone for SV {
+    fn clone(&self) -> SV {
+        unsafe {
+            SV::from_raw_borrowed(self.pthx(), self.as_ptr())
+        }
+    }
+}
+
 impl FromSV for IV {
     #[inline]
     unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> IV {

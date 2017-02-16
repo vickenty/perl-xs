@@ -26,12 +26,12 @@ impl<T: HasRefCnt> Ref<T> {
 
     #[inline]
     pub fn incref(&self) {
-        unsafe { self.0.sv_refcnt_inc_void_nn(self.1 as *mut SV) }
+        unsafe { self.0.ouroboros_sv_refcnt_inc_void_nn(self.1 as *mut SV) }
     }
 
     #[inline]
     pub fn decref(&self) {
-        unsafe { self.0.sv_refcnt_dec_nn(self.1 as *mut SV) }
+        unsafe { self.0.ouroboros_sv_refcnt_dec_nn(self.1 as *mut SV) }
     }
 
     #[inline]

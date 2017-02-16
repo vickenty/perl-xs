@@ -14,71 +14,71 @@ pub struct SV(Owned<raw::SV>);
 impl SV {
     method! {
         /// Return true if SV is a real scalar value.
-        simple fn is_scalar() -> bool = sv_type() < SVt_PVAV
+        simple fn is_scalar() -> bool = ouroboros_sv_type() < SVt_PVAV
     }
     method! {
         /// Return true if SV contains array.
-        simple fn is_array() -> bool = sv_type() == SVt_PVAV
+        simple fn is_array() -> bool = ouroboros_sv_type() == SVt_PVAV
     }
     method! {
         /// Return true if SV contains hash.
-        simple fn is_hash() -> bool = sv_type() == SVt_PVHV
+        simple fn is_hash() -> bool = ouroboros_sv_type() == SVt_PVHV
     }
     method! {
         /// Return true if SV contains subroutine.
-        simple fn is_code() -> bool = sv_type() == SVt_PVCV
+        simple fn is_code() -> bool = ouroboros_sv_type() == SVt_PVCV
     }
     method! {
         /// Return true if SV contains glob.
-        simple fn is_glob() -> bool = sv_type() == SVt_PVGV
+        simple fn is_glob() -> bool = ouroboros_sv_type() == SVt_PVGV
     }
     method! {
         /// Return true if SV is defined.
         ///
         /// [`SvOK`](http://perldoc.perl.org/perlapi.html#SvOK).
-        simple fn ok() -> bool = sv_ok() != 0
+        simple fn ok() -> bool = ouroboros_sv_ok() != 0
     }
     method! {
         /// Return true if SV contains a signed integer.
         ///
         /// Perl macro:[`SvIOK`](http://perldoc.perl.org/perlapi.html#SvIOK).
-        simple fn iv_ok() -> bool = sv_iok() != 0
+        simple fn iv_ok() -> bool = ouroboros_sv_iok() != 0
     }
     method! {
         /// Coerce the given SV to an integer and return it.
         ///
         /// Perl macro: [`SvIV`](http://perldoc.perl.org/perlapi.html#SvIV).
-        simple fn iv() -> IV = sv_iv()
+        simple fn iv() -> IV = ouroboros_sv_iv()
     }
     method! {
         /// Return true if SV contains a unsigned integer.
         ///
         /// Perl macro:[`SvUOK`](http://perldoc.perl.org/perlapi.html#SvUOK).
-        simple fn uv_ok() -> bool = sv_uok() != 0
+        simple fn uv_ok() -> bool = ouroboros_sv_uok() != 0
     }
     method! {
         /// Coerce the given SV to an unsigned integer and return it.
         ///
         /// Perl macro: [`SvUV`](http://perldoc.perl.org/perlapi.html#SvUV).
-        simple fn uv() -> UV = sv_uv()
+        simple fn uv() -> UV = ouroboros_sv_uv()
     }
     method! {
         /// Return true if SV contains a floating point value.
         ///
         /// Perl macro:[`SvNOK`](http://perldoc.perl.org/perlapi.html#SvNOK).
-        simple fn nv_ok() -> bool = sv_nok() != 0
+        simple fn nv_ok() -> bool = ouroboros_sv_nok() != 0
     }
     method! {
         /// Coerce the given SV to a floating point value and return it.
         ///
         /// Perl macro: [`SvNV`](http://perldoc.perl.org/perlapi.html#SvNV).
-        simple fn nv() -> NV = sv_nv()
+        simple fn nv() -> NV = ouroboros_sv_nv()
     }
     method! {
         /// Return true if SV contains a string.
         ///
         /// Perl macro:[`SvPOK`](http://perldoc.perl.org/perlapi.html#SvPOK).
-        simple fn pv_ok() -> bool = sv_pok() != 0
+        simple fn pv_ok() -> bool = ouroboros_sv_pok() != 0
     }
     method! {
         /// Return UTF8 flag on the SV.
@@ -87,7 +87,7 @@ impl SV {
         /// overloading updates the internal flag.
         ///
         /// Perl macro: [`SvUTF8`](http://perldoc.perl.org/perlapi.html#SvUTF8).
-        simple fn utf8() -> bool = sv_utf8() != 0
+        simple fn utf8() -> bool = ouroboros_sv_utf8() != 0
     }
 
     /// Get a slice of the internal string buffer of the SV.
@@ -114,7 +114,7 @@ impl SV {
     #[inline]
     pub unsafe fn as_slice(&self) -> &[u8] {
         let mut len = 0;
-        let ptr = self.pthx().sv_pv(self.as_ptr(), &mut len);
+        let ptr = self.pthx().ouroboros_sv_pv(self.as_ptr(), &mut len);
         slice::from_raw_parts(ptr as *const u8, len as usize)
     }
 
@@ -140,12 +140,12 @@ impl SV {
         /// Return true if SV contains a Perl reference.
         ///
         /// Perl macro:[`SvROK`](http://perldoc.perl.org/perlapi.html#SvROK).
-        simple fn rv_ok() -> bool = sv_rok() != 0
+        simple fn rv_ok() -> bool = ouroboros_sv_rok() != 0
     }
 
     #[inline]
     unsafe fn deref_raw(&self) -> *mut raw::SV {
-        self.pthx().sv_rv(self.as_ptr())
+        self.pthx().ouroboros_sv_rv(self.as_ptr())
     }
 
     /// Dereference RV.
@@ -273,7 +273,7 @@ impl TryFromSV for String {
     #[inline]
     unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<Self, Self::Error> {
         let mut len = 0;
-        let ptr = pthx.sv_pv(raw, &mut len);
+        let ptr = pthx.ouroboros_sv_pv(raw, &mut len);
         let bytes = slice::from_raw_parts(ptr as *const u8, len as usize);
         Ok(try!(std::str::from_utf8(bytes)).to_owned())
     }
@@ -282,21 +282,21 @@ impl TryFromSV for String {
 impl IntoSV for IV {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe { SV::from_raw_owned(pthx, pthx.new_sv_iv(self)) }
+        unsafe { SV::from_raw_owned(pthx, pthx.newSViv(self)) }
     }
 }
 
 impl IntoSV for UV {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe { SV::from_raw_owned(pthx, pthx.new_sv_uv(self)) }
+        unsafe { SV::from_raw_owned(pthx, pthx.newSVuv(self)) }
     }
 }
 
 impl IntoSV for NV {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
-        unsafe { SV::from_raw_owned(pthx, pthx.new_sv_nv(self)) }
+        unsafe { SV::from_raw_owned(pthx, pthx.newSVnv(self)) }
     }
 }
 
@@ -304,7 +304,7 @@ impl IntoSV for bool {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {
-            let raw = if self { pthx.sv_yes() } else { pthx.sv_no() };
+            let raw = if self { pthx.ouroboros_sv_yes() } else { pthx.ouroboros_sv_no() };
             SV::from_raw_owned(pthx, raw)
         }
     }
@@ -321,7 +321,7 @@ impl<'a> IntoSV for &'a str {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {
-            let svp = pthx.new_sv_pvn(self.as_ptr() as *const i8,
+            let svp = pthx.newSVpvn_flags(self.as_ptr() as *const i8,
                                       self.len() as raw::STRLEN,
                                       raw::SVf_UTF8 as raw::U32);
             SV::from_raw_owned(pthx, svp)

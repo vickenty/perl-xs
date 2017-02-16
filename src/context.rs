@@ -7,11 +7,12 @@ use std::ffi::CStr;
 
 /// XS call context.
 pub struct Context {
-    pthx: raw::Interpreter,
+    perl: raw::Interpreter,
     stack: raw::Stack,
 }
 
 const EMPTY: &'static [i8] = &[ 0 ];
+
 
 impl Context {
     /// Invoke closure with the context of Perl subroutine call.
@@ -32,26 +33,24 @@ impl Context {
     /// on [Exception Handling](http://perldoc.perl.org/perlguts.html#Exception-Handling) in the
     /// Perl documentation).
     #[inline]
-    pub fn wrap<R, F>(pthx: raw::PerlThreadContext, f: F)
+    pub fn wrap<R, F>(perl: raw::Interpreter, f: F)
         where R: Stackable,
               F: FnOnce(&mut Self) -> R + std::panic::UnwindSafe
     {
         unsafe {
-            let perl = raw::Interpreter::new(pthx);
-
-            perl.catch_unwind(|| {
+            raw::catch_unwind(perl, || {
                 let mut ctx = Context {
-                    pthx: perl,
+                    perl: perl,
                     stack: std::mem::uninitialized(),
                 };
 
-                perl.stack_init(&mut ctx.stack);
+                perl.ouroboros_stack_init(&mut ctx.stack);
 
                 let value = f(&mut ctx);
 
                 value.push_to(&mut ctx);
 
-                perl.stack_putback(&mut ctx.stack);
+                perl.ouroboros_stack_putback(&mut ctx.stack);
             });
         }
     }
@@ -63,7 +62,7 @@ impl Context {
     /// See: [`PUTBACK`](http://perldoc.perl.org/perlapi.html#PUTBACK).
     #[inline]
     pub fn st_putback(&mut self) {
-        unsafe { self.pthx.stack_putback(&mut self.stack) };
+        unsafe { self.perl.ouroboros_stack_putback(&mut self.stack) };
     }
 
     /// Return number of items on the argument stack.
@@ -71,14 +70,14 @@ impl Context {
     /// [`items`](http://perldoc.perl.org/perlapi.html#items).
     #[inline]
     pub fn st_items(&mut self) -> isize {
-        unsafe { self.pthx.stack_items(&mut self.stack) as isize }
+        unsafe { self.perl.ouroboros_stack_items(&mut self.stack) as isize }
     }
 
     unsafe fn st_fetch_raw(&mut self, idx: isize) -> Option<*mut raw::SV> {
         if idx >= self.st_items() {
             return None;
         }
-        let svp = self.pthx.stack_fetch(&mut self.stack, idx as raw::SSize_t);
+        let svp = self.perl.ouroboros_stack_fetch(&mut self.stack, idx as raw::SSize_t);
         if svp.is_null() {
             return None;
         }
@@ -93,7 +92,7 @@ impl Context {
     pub fn st_fetch<T>(&mut self, idx: isize) -> Option<T> where T: FromSV
     {
         unsafe {
-            self.st_fetch_raw(idx).map(|svp| T::from_sv(self.pthx, svp))
+            self.st_fetch_raw(idx).map(|svp| T::from_sv(self.perl, svp))
         }
     }
 
@@ -103,7 +102,7 @@ impl Context {
         where T: TryFromSV
     {
         unsafe {
-            self.st_fetch_raw(idx).map(|svp| T::try_from_sv(self.pthx, svp))
+            self.st_fetch_raw(idx).map(|svp| T::try_from_sv(self.perl, svp))
         }
     }
 
@@ -112,8 +111,8 @@ impl Context {
     /// See: [`mXPUSHs`](http://perldoc.perl.org/perlapi.html#mXPUSHs).
     #[inline]
     pub fn st_push<T>(&mut self, val: T) where T: IntoSV {
-        let sv = val.into_sv(self.pthx);
-        unsafe { self.pthx.stack_xpush_sv_mortal(&mut self.stack, sv.into_raw()) };
+        let sv = val.into_sv(self.perl);
+        unsafe { self.perl.ouroboros_stack_xpush_sv_mortal(&mut self.stack, sv.into_raw()) };
     }
 
     // XSUB
@@ -123,7 +122,7 @@ impl Context {
     /// See: [`newXS`](http://perldoc.perl.org/perlapi.html#newXS).
     #[inline]
     pub fn new_xs(&mut self, name: &CStr, xsaddr: raw::XSUBADDR_t) {
-        unsafe { self.pthx.new_xs(name.as_ptr(), xsaddr, EMPTY.as_ptr()) };
+        unsafe { self.perl.newXS(name.as_ptr(), xsaddr, EMPTY.as_ptr()) };
     }
 
     // GLOBALS
@@ -133,11 +132,11 @@ impl Context {
     /// See: [`get_av`](http://perldoc.perl.org/perlapi.html#get_av).
     #[inline]
     pub fn get_av(&mut self, name: &CStr) -> Option<AV> {
-        let avp = unsafe { self.pthx.get_av(name.as_ptr(), 0) };
+        let avp = unsafe { self.perl.get_av(name.as_ptr(), 0) };
         if avp.is_null() {
             None
         } else {
-            Some(unsafe { AV::from_raw_borrowed(self.pthx, avp) })
+            Some(unsafe { AV::from_raw_borrowed(self.perl, avp) })
         }
     }
 
@@ -146,7 +145,7 @@ impl Context {
     /// See: [`call_pv`](http://perldoc.perl.org/perlapi.html#call_pv).
     #[inline]
     pub fn call_pv(&mut self, name: &CStr, flags: raw::U32) {
-        unsafe { self.pthx.call_pv(name.as_ptr(), flags as raw::I32) };
+        unsafe { self.perl.call_pv(name.as_ptr(), flags as raw::I32) };
     }
 
     // SCALARS
@@ -154,12 +153,12 @@ impl Context {
     /// Allocate new SV of type appropriate to store `T`
     #[inline]
     pub fn new_sv<T>(&mut self, val: T) -> SV where T: IntoSV {
-        val.into_sv(self.pthx)
+        val.into_sv(self.perl)
     }
 
     /// Return an undefined SV.
     pub fn sv_undef(&mut self) -> SV {
-        unsafe { SV::from_raw_owned(self.pthx, self.pthx.sv_undef()) }
+        unsafe { SV::from_raw_owned(self.perl, self.perl.ouroboros_sv_undef()) }
     }
 }
 

@@ -107,7 +107,7 @@ impl AV {
         unsafe {
             let raw = val.into_raw();
             let svpp = self.pthx().av_store(self.as_ptr(), key, raw);
-            if svpp.is_null() { self.pthx().sv_refcnt_dec(raw) }
+            if svpp.is_null() { self.pthx().ouroboros_sv_refcnt_dec(raw) }
         }
     }
 
@@ -135,11 +135,11 @@ impl AV {
 impl TryFromSV for AV {
     type Error = &'static str;
     unsafe fn try_from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Result<AV, Self::Error> {
-        if pthx.sv_rok(raw) == 0 {
+        if pthx.ouroboros_sv_rok(raw) == 0 {
             return Err("not an array reference");
         }
 
-        Ok(AV::from_raw_borrowed(pthx, pthx.sv_rv(raw) as *mut _))
+        Ok(AV::from_raw_borrowed(pthx, pthx.ouroboros_sv_rv(raw) as *mut _))
     }
 }
 

@@ -33,7 +33,8 @@ macro_rules! xs {
         $(
             pthx! {
                 fn $name (pthx, _cv: *mut $crate::raw::CV) {
-                    $crate::context::Context::wrap(pthx, |$ctx| {
+                    let perl = $crate::raw::initialize(pthx);
+                    $crate::context::Context::wrap(perl, |$ctx| {
                         let mut _arg = 0;
                         $(
                             let $par = match $ctx.st_try_fetch::<$pty>(_arg) {
@@ -83,7 +84,8 @@ macro_rules! xs {
             #[no_mangle]
             #[allow(non_snake_case)]
             fn $boot (pthx, _cv: *mut $crate::raw::CV) {
-                $crate::context::Context::wrap(pthx, |ctx| {
+                let perl = $crate::raw::initialize(pthx);
+                $crate::context::Context::wrap(perl, |ctx| {
                     $(
                         for &(subname, subptr) in $( $name )::*::PERL_XS {
                             let cname = ::std::ffi::CString::new(subname).unwrap();

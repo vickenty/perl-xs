@@ -1,9 +1,14 @@
 use std;
-use std::{ mem, slice, string };
-use handle::Owned;
+use std::{ ptr, mem, slice, string };
+use std::any::Any;
+use std::ops::Deref;
+use std::os::raw::{ c_char, c_int };
+
 use raw;
 use raw::{ IV, UV, NV };
 use raw::{ SVt_PVAV, SVt_PVHV, SVt_PVCV, SVt_PVGV };
+
+use handle::Owned;
 use array::{ AV };
 use hash::{ HV };
 use convert::{ IntoSV, FromSV, TryFromSV };
@@ -118,6 +123,18 @@ impl SV {
         slice::from_raw_parts(ptr as *const u8, len as usize)
     }
 
+    /// TODO
+    #[inline]
+    pub unsafe fn as_str(&self) -> Result<&str, std::str::Utf8Error> {
+        std::str::from_utf8(self.as_slice())
+    }
+
+    /// TODO
+    #[inline]
+    pub unsafe fn as_str_unchecked(&self) -> &str {
+        std::str::from_utf8_unchecked(self.as_slice())
+    }
+
     /// Return a copy of string in the SV as a vector of bytes.
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
@@ -196,6 +213,21 @@ impl SV {
         }
     }
 
+    /// Bless the SV scalar into given package.
+    ///
+    /// Panics if scalar is not a reference.
+    ///
+    /// See: [`bless`](http://perldoc.perl.org/perlfunc.html#bless)
+    #[inline]
+    pub fn bless(self, package: &str) -> SV {
+        let pthx = self.pthx();
+        unsafe {
+            let stash = pthx.gv_stashpvn(package.as_ptr() as *const _, package.len() as _, raw::GV_ADD as _);
+            pthx.sv_bless(self.as_ptr(), stash);
+        }
+        self
+    }
+
     /// Consume SV and convert into raw pointer.
     ///
     /// Does not decrement reference count. Returned pointer must be correctly disposed of to avoid
@@ -205,6 +237,58 @@ impl SV {
         let raw = self.0.as_ptr();
         mem::forget(self);
         raw
+    }
+
+    /// Create a new reference to this scalar, transferring ownership to the reference.
+    #[inline]
+    pub fn into_ref(self) -> SV {
+        let pthx = self.pthx();
+        unsafe {
+            let rv = pthx.newRV_noinc(self.into_raw());
+            SV::from_raw_owned(pthx, rv)
+        }
+    }
+
+    /// Store a Rust value inside the SV.
+    ///
+    /// SV takes ownership of the `value`, which will be dropped when the SV reference count drops
+    /// to zero. It is possible to attach multiple values to the SV, but currently only one can be
+    /// retrieved.
+    ///
+    /// This relies on [Perl magic](http://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables) to
+    /// store the value. Magic is not copied on scalar assignment, so to be useful, scalars with
+    /// magic need to be passed around by reference.
+    pub fn add_data(&self, value: Box<Any>) {
+        let pthx = self.pthx();
+        let svp = self.as_ptr();
+        let obj = ptr::null_mut();
+        let ptr = Box::into_raw(Box::new(value)) as *const c_char;
+        let len = 0;
+        unsafe {
+            pthx.sv_magicext(svp, obj, raw::PERL_MAGIC_ext as _, &VTBL_ANY, ptr, len);
+        }
+    }
+
+    /// Get a reference to a Rust value stored in the SV.
+    ///
+    /// `Ref` takes ownership of the SV to protect the value from being dropped while reference is
+    /// alive.
+    ///
+    /// `None` is returned if no value was found in the SV.
+    pub fn into_data_ref(self) -> Option<DataRef<Any>> {
+        let pthx = self.pthx();
+        unsafe {
+            let magic = pthx.mg_findext(self.as_ptr(), raw::PERL_MAGIC_ext as _, &VTBL_ANY);
+            if !magic.is_null() {
+                let ptr = (*magic).mg_ptr as *const Box<Any>;
+                Some(DataRef {
+                    owner: self,
+                    inner: (*ptr).as_ref(),
+                })
+            } else {
+                None
+            }
+        }
     }
 
     /// Construct new instance from a raw SV pointer without incrementing reference counter.
@@ -226,8 +310,10 @@ impl SV {
         SV(Owned::from_raw_borrowed(pthx, raw))
     }
 
+    #[inline]
     fn pthx(&self) -> raw::Interpreter { self.0.pthx() }
 
+    #[inline]
     fn as_ptr(&self) -> *mut raw::SV { self.0.as_ptr() }
 }
 
@@ -342,5 +428,94 @@ impl<'a> IntoSV for &'a SV {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         assert!(self.pthx() == pthx);
         self.clone()
+    }
+}
+
+pthx! {
+    fn magic_free_any(_pthx, _sv: *mut raw::SV, magic: *mut raw::MAGIC) -> c_int {
+        unsafe {
+            let ptr = (*magic).mg_ptr as *mut Box<Any>;
+            assert!(!ptr.is_null());
+            drop(Box::from_raw(ptr));
+        }
+        0
+    }
+}
+
+static VTBL_ANY: raw::MGVTBL = raw::MGVTBL {
+    svt_free: Some(magic_free_any),
+    ..raw::EMPTY_MGVTBL
+};
+
+impl IntoSV for Box<Any> {
+    fn into_sv(self, pthx: raw::Interpreter) -> SV {
+        let sv = unsafe { SV::from_raw_owned(pthx, pthx.newSV(0)) };
+        sv.add_data(self);
+        sv.into_ref()
+    }
+}
+
+/// Reference to a Rust value stored inside the SV.
+///
+/// ```ignore
+/// let value_sv: SV = ctx.new_sv_data(String::from("Hello world!"));
+/// let data_ref: DataRef<String> = value_sv.into_data_ref().unwrap();
+/// assert_eq!(&**data_ref, "Hello world!");
+/// ```
+///
+/// Because Perl scalars are always shared, `DataRef` can provide only immutable references to the stored
+/// value. If mutable access is needed, value can be wrapped in a `RefCell`.
+///
+/// `DataRef` can be used as a type for a subroutine parameter:
+///
+/// ```ignore
+/// sub increment(_ctx, value: DataRef<RefCell<IV>>, amount: IV) {
+///     *value.borrow_mut() += amount;
+/// }
+/// ```
+///
+/// If `increment` is then called with a scalar that does not contain a `RefCell<IV>` value,
+/// perl exception will be thrown.
+pub struct DataRef<T: ?Sized> {
+    inner: *const T,
+    owner: SV,
+}
+
+impl DataRef<Any> {
+    /// Attempt to downcast the ref to the concrete type while preserving owning SV.
+    pub fn downcast<T: 'static>(self) -> Option<DataRef<T>> {
+        let DataRef { inner, owner } = self;
+        unsafe {
+            (*inner).downcast_ref::<T>().map(|r| DataRef {
+                inner: r,
+                owner: owner,
+            })
+        }
+    }
+}
+
+impl<T: ?Sized> Deref for DataRef<T> {
+    type Target = T;
+
+    fn deref(&self) -> &T {
+        unsafe { &*self.inner }
+    }
+}
+
+impl TryFromSV for DataRef<Any> {
+    type Error = &'static str;
+
+    unsafe fn try_from_sv(pthx: raw::Interpreter, sv: *mut raw::SV) -> Result<Self, Self::Error> {
+        let outer = SV::from_raw_borrowed(pthx, sv);
+        let inner = try!(outer.deref().ok_or("not a reference"));
+        inner.into_data_ref().ok_or("invalid value")
+    }
+}
+
+impl<T: 'static> TryFromSV for DataRef<T> {
+    type Error = &'static str;
+
+    unsafe fn try_from_sv(pthx: raw::Interpreter, svp: *mut raw::SV) -> Result<Self, Self::Error> {
+        DataRef::<Any>::try_from_sv(pthx, svp)?.downcast().ok_or("invalid value")
     }
 }

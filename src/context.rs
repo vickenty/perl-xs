@@ -156,6 +156,33 @@ impl Context {
         val.into_sv(self.perl)
     }
 
+    /// Create a new SV to store an arbitrary Rust value.
+    ///
+    /// This function returns a perl reference to a newly allocated SV, that has Rust value attached
+    /// via [perl magic](http://perldoc.perl.org/perlguts.html#Magic-Variables).
+    ///
+    /// Value can be accessed via `SV::into_data_ref()` method or automatic conversions to
+    /// `DataRef<T>`.
+    ///
+    /// ```ignore
+    /// xs! {
+    ///   package Counter;
+    ///   sub new(ctx, class: String, initial: IV) {
+    ///     ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
+    ///   }
+    ///   sub get(_ctx, this: DataRef<RefCell<IV>>) {
+    ///     *this.borrow()
+    ///   }
+    ///   sub inc(_ctx, this: DataRef<RefCell<IV>>, amount: Option<IV>) {
+    ///     *this.borrow_mut() += amount.unwrap_or(1)
+    ///   }
+    /// }
+    /// ```
+    #[inline]
+    pub fn new_sv_with_data<T: 'static>(&mut self, value: T) -> SV {
+        self.new_sv(Box::new(value) as Box<std::any::Any>)
+    }
+
     /// Return an undefined SV.
     pub fn sv_undef(&mut self) -> SV {
         unsafe { SV::from_raw_owned(self.perl, self.perl.ouroboros_sv_undef()) }

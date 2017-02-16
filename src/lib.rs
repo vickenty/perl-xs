@@ -2,6 +2,7 @@
 
 //! Perl XS API for Rust.
 
+#[macro_use]
 extern crate perl_sys;
 
 #[macro_use]
@@ -24,6 +25,6 @@ pub mod croak;
 
 pub use raw::{ IV, UV, NV, Size_t, SSize_t, STRLEN };
 pub use raw::{ G_DISCARD, G_VOID };
-pub use scalar::SV;
+pub use scalar::{SV, DataRef};
 pub use array::AV;
 pub use hash::HV;

@@ -9,6 +9,7 @@ mod array;
 mod hash;
 mod panic;
 mod param;
+mod data;
 
 xs! {
     bootstrap boot_XSTest;
@@ -18,4 +19,5 @@ xs! {
     use hash;
     use panic;
     use param;
+    use data;
 }

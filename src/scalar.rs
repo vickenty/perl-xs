@@ -123,18 +123,6 @@ impl SV {
         slice::from_raw_parts(ptr as *const u8, len as usize)
     }
 
-    /// TODO
-    #[inline]
-    pub unsafe fn as_str(&self) -> Result<&str, std::str::Utf8Error> {
-        std::str::from_utf8(self.as_slice())
-    }
-
-    /// TODO
-    #[inline]
-    pub unsafe fn as_str_unchecked(&self) -> &str {
-        std::str::from_utf8_unchecked(self.as_slice())
-    }
-
     /// Return a copy of string in the SV as a vector of bytes.
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).

@@ -14,8 +14,8 @@ my $strings = [ XSTest::test_push_unicode() ];
 is_deeply $strings, [
     "Don't panic!",
     "Не паникуйте!",
-    "慌てる必要がありません",
-    "Nu intrat\x{0326}i i\x{0302}n panica\x{0306}!",
+    "あわてるな",
+    "Nu intra i\x{0302}n panica\x{0306}",
     "😱❌",
 ], "unicode strings ok";
 

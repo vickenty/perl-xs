@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/vickenty/perl-xs.svg?branch=master)](https://travis-ci.org/vickenty/perl-xs)
+
 # Perl XS for Rust
 
 High-level Rust bindings to Perl XS API.

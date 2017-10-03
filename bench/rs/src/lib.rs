@@ -11,7 +11,7 @@ xs! {
     sub rs_sum_loop(ctx, array: AV) {
         let mut sum = 0.0;
         for i in 0..array.top_index() + 1 {
-            if let Some(val) = array.fetch(i) {
+            if let Some(val) = array.fetch::<NV>(i) {
                 sum += val;
             }
         }

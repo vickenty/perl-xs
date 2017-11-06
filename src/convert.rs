@@ -3,6 +3,7 @@
 use std::fmt::Display;
 use raw;
 use SV;
+use context::Context;
 
 /// Fast unsafe conversion from raw SV pointer.
 pub trait FromSV {
@@ -39,4 +40,10 @@ impl<T> TryFromSV for T where T: FromSV {
     {
         Ok(T::from_sv(perl, raw))
     }
+}
+
+/// Construct new `Self` from `key value pairs of the XSUB context`.
+pub trait FromKeyValueStack {
+    /// Check to make sure we have everything, and then do the conversion.
+    fn from_kv_stack( ctx: Context ) -> Self;
 }

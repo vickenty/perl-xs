@@ -45,5 +45,5 @@ impl<T> TryFromSV for T where T: FromSV {
 /// Construct new `Self` from `key value pairs of the XSUB context`.
 pub trait FromKeyValueStack {
     /// Check to make sure we have everything, and then do the conversion.
-    fn from_kv_stack( ctx: Context ) -> Self;
+    fn from_kv_stack( ctx: &mut Context, offset: isize ) -> Self;
 }

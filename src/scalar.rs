@@ -384,6 +384,13 @@ impl IntoSV for bool {
     }
 }
 
+impl FromSV for bool {
+    #[inline]
+    unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> bool {
+        pthx.sv_true(raw) != 0
+    }
+}
+
 impl IntoSV for String {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {

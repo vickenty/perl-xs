@@ -12,7 +12,7 @@ pub fn from_kv_stack(input: TokenStream) -> TokenStream {
 //    let s = input.to_string();
     
     // Parse the string representation
-    let ast = syn::parse_macro_input(&input).unwrap();
+    let ast = syn::parse_macro_input(&input.to_string()).unwrap();
 
     // Build the impl
     let gen = impl_from_kv_stack(&ast);
@@ -22,19 +22,19 @@ pub fn from_kv_stack(input: TokenStream) -> TokenStream {
 }
 
 fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
-    let vis = &input.vis;
-    let name = &ast.ident;
+    let vis = &ast.vis;
+    let ident = &ast.ident;
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
     // create a vector containing the names of all fields on the struct
     
-    let fields: Vec<Field> = match ast.body {
-        syn::Body::Struct(vdata) => {
+    let fields: Vec<_> = match ast.body {
+        syn::Body::Struct(ref vdata) => {
             match vdata {
-                VariantData::Struct(fields) => {
-                    fields
+                &VariantData::Struct(ref fields) => {
+                    fields.clone()
                 },
-                VariantData::Tuple(_) | VariantData::Unit => {
+                &VariantData::Tuple(_) | &VariantData::Unit => {
                     panic!("You can only derive this for normal structs!");
                 },
             }
@@ -47,25 +47,26 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
     //     &None => panic!("Your struct is missing a field identity!"),
     // }
 
-    let mut let_vars = Vec::new();
-    let mut param_vars = Vec::new();
+    let mut letvars = Vec::new();
+    let mut paramvars = Vec::new();
+    let mut matchparts = Vec::new();
 
     for field in fields.iter(){
-        let ident = &f.ident;
-        let ty = &f.ty;
+        let ident = &field.ident;
+        let ty = &field.ty;
 
-        let_vars.push(
+        letvars.push(
             quote! {
                 let mut v__#ident = #ty::default();
             }
         );
-        param_vars.push(
+        paramvars.push(
             quote! {
                 #ident: v__#ident,
             }
         );
 
-        match_parts.push(quote!{
+        matchparts.push(quote!{
             "#ident" => {
                 let s_res = ctx.st_try_fetch::<#ty>(i+1).expect("no argument provided for parameter \"#ident\"");
                 let v = s_res.expect("parameter #ident unable to be interpreted as a string");
@@ -79,15 +80,13 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
             #vis fn from_kv_stack(ctx: &mut Context, offset: isize) -> Self
             {
                 //define vars
-                #(#let_vars;)*
+                #(#letvars;)*
 
                 while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
                     match sv_res {
                         Ok(key) => { 
                             match &*key {
-                                #(
-                                    #matchparts,
-                                )*
+                                #(#matchparts,)*
                             }
                         },
                         Err(e) => {
@@ -97,9 +96,7 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
                 };
 
                 Self{
-                    #(
-                        #param_vars,
-                    )*
+                    #(#paramvars,)*
                 }
             }
         }

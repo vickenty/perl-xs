@@ -1,14 +1,11 @@
 [package]
-name = "perl-xs-derive"
+name = "perl_xs_derive"
 version = "0.1.0"
 authors = ["Vickenty Fesunov <kent@setattr.net>"]
 license = "BSD-2-Clause"
 
-[badges]
-travis-ci = { repository = "serde-rs/serde" }
-
 [lib]
-name = "serde_derive"
+name = "perl_xs_derive"
 proc-macro = true
 
 [dependencies]
@@ -16,4 +13,4 @@ syn = "0.11.11"
 quote = "0.3.15"
 
 [dependencies.perl-xs]
-path = "../perl-xs"
+path = "../"

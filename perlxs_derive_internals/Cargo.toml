@@ -1,0 +1,9 @@
+[package]
+name = "perlxs_derive_internals"
+version = "0.1.0"
+authors = ["perl-xs authors"]
+license = "BSD-2-Clause"
+
+[dependencies]
+syn = "0.11.11"
+quote = "0.3.15"

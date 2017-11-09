@@ -1,24 +1,27 @@
+#![feature(proc_macro)]
+
 extern crate proc_macro;  
-extern crate syn;  
+extern crate syn;
 #[macro_use]
 extern crate quote;
+
+extern crate perlxs_derive_internals;
+use perlxs_derive_internals as internals;
 
 use proc_macro::TokenStream;  
 use syn::{Ident, VariantData};
 
-#[proc_macro_derive(FromKeyValueStack)]
-pub fn from_kv_stack(input: TokenStream) -> TokenStream {  
-    // Construct a string representation of the type definition
-//    let s = input.to_string();
-    
-    // Parse the string representation
+#[proc_macro_derive(FromKeyValueStack, attributes(perlxs))]
+pub fn from_kv_stack(input: TokenStream) -> TokenStream {
+
     let ast = syn::parse_macro_input(&input.to_string()).unwrap();
 
     // Build the impl
     let gen = impl_from_kv_stack(&ast);
-    
+    println!("Meow {}", gen.to_string());
+    TokenStream::empty()
     // Return the generated impl
-    gen.parse().unwrap()
+    //gen.parse().unwrap()
 }
 
 fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
@@ -27,12 +30,15 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
     // create a vector containing the names of all fields on the struct
-    
-    let fields: Vec<_> = match ast.body {
+    //    let dummy_const = Ident::new(format!("_IMPL_DESERIALIZE_FOR_{}", ident));
+
+    let errors = internals::error::Errors::new();
+
+    let fields = match ast.body {
         syn::Body::Struct(ref vdata) => {
             match vdata {
                 &VariantData::Struct(ref fields) => {
-                    fields.clone()
+                    internals::ast::fields_from_ast(&errors, fields)
                 },
                 &VariantData::Tuple(_) | &VariantData::Unit => {
                     panic!("You can only derive this for normal structs!");
@@ -42,37 +48,42 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
         syn::Body::Enum(_) => panic!("You can only derive this on structs!"),
     };
 
-    // match &field.ident {
-    //     &Some(ref ident) => idents.push(ident.clone()),
-    //     &None => panic!("Your struct is missing a field identity!"),
-    // }
+    errors.check().unwrap();
 
     let mut letvars = Vec::new();
     let mut paramvars = Vec::new();
     let mut matchparts = Vec::new();
 
     for field in fields.iter(){
-        let ident = &field.ident;
-        let ty = &field.ty;
+        let ident    = &field.ident;
+        let identval = ident.clone();
+        let ty       = &field.ty;
+        let var      = Ident::new(format!("value_{}", ident));
+
+        println!( "Got key attribute: {:?}", field );
 
         letvars.push(
             quote! {
-                let mut v__#ident = #ty::default();
-            }
-        );
-        paramvars.push(
-            quote! {
-                #ident: v__#ident,
+                let mut #identval = #ty::default();
             }
         );
 
-        matchparts.push(quote!{
-            "#ident" => {
-                let s_res = ctx.st_try_fetch::<#ty>(i+1).expect("no argument provided for parameter \"#ident\"");
-                let v = s_res.expect("parameter #ident unable to be interpreted as a string");
-                v__#ident = Some( v );
+        paramvars.push(
+            quote! {
+                #ident: #identval,
             }
-        })
+        );
+
+        for key in field.keys.iter(){
+            matchparts.push(quote!{
+                #key => {
+                    let s_res = ctx.st_try_fetch::<#ty>(i+1).expect("no argument provided for parameter \"#ident\"");
+                    let v = s_res.expect("parameter #ident unable to be interpreted as a string");
+                    #var = Some( v );
+                }
+            })
+        }
+
     }
 
     quote! {

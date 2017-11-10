@@ -1,14 +1,18 @@
 use syn;
 use syn::MetaItem::{List, NameValue, Word};
 use syn::NestedMetaItem::{Literal, MetaItem};
+use syn::{Ident,Ty,Lit,StrStyle,AngleBracketedParameterData,PathParameters,PathSegment};
+use quote::ToTokens;
 
 use error::Errors;
 
 #[derive(Debug)]
 pub struct Field {
-    pub ident:     String,
-    pub keys:      Vec<syn::StrLit>, // could switch to syn::Lit later
-    pub ty:    syn::Ty
+    pub name:      String,
+    pub ident:     syn::Ident,
+    pub keys:      Vec<String>,
+    pub ty:        syn::Ty,
+    pub optional:  bool,
 }
 
 impl Field {
@@ -16,7 +20,7 @@ impl Field {
     pub fn from_ast(errors: &Errors, index: usize, field: &syn::Field) -> Self {
         let mut keys = Vec::new();
 
-        let ident = match field.ident {
+        let name = match field.ident {
             Some(ref ident) => ident.to_string(),
             None            => index.to_string(),
         };
@@ -27,7 +31,7 @@ impl Field {
                     // Parse `#[perlxs(key = "-foo")]`
                     MetaItem(NameValue(ref name, ref lit)) if name == "key" => {
                         if let Ok(s) = get_string_from_lit(errors, name.as_ref(), name.as_ref(), lit) {
-                            keys.push( syn::StrLit{ value: s, style: syn::StrStyle::Cooked}  );
+                            keys.push( s );
                         }
                     },
                     MetaItem(ref meta_item) => {
@@ -45,19 +49,57 @@ impl Field {
         if keys.len() == 0 {
             match field.ident {
                 Some(ref ident) => keys.push(
-                    syn::StrLit{ value: ident.to_string(), style: syn::StrStyle::Cooked }
+                    ident.to_string()
                 ),
                 None            => errors.error("at least one key is required"),
             };
         }
 
+        //Path(None, Path { global: false, segments: [PathSegment { ident: Ident("Option"), parameters: AngleBracketed(AngleBracketedParameterData { lifetimes: [], types: [Path(None, Path { global: false, segments: [PathSegment { ident: Ident("String"), parameters: AngleBracketed(AngleBracketedParameterData { lifetimes: [], types: [], bindings: [] }) }] })], bindings: [] }) }] })
+        let (optional,inner_ty) = de_optionalize(&field.ty);
+                    
         Field {
-            ident:     ident,
+            ident:     field.ident.clone().unwrap(),
+            name:      name,
             keys:      keys,
-            ty:        field.ty.clone(),
+            ty:        inner_ty,
+            optional:  optional,
         }
     }
+    pub fn err_omitted(&self) -> Lit {
+        let s = if self.keys.len() == 1 {
+            format!("{:?} must be specified", self.keys[0])
+        }else{
+            format!("One of the following must be specified: {:?}", self.keys)
+        };
 
+        Lit::Str(s,StrStyle::Cooked)
+    }
+    pub fn err_no_val(&self,key: &String) -> Lit {
+        let s = format!("No value specified for {}", key);
+        Lit::Str(s,StrStyle::Cooked)
+    }
+    pub fn err_parse_fail (&self, key: &String) -> Lit {
+        let ty = &self.ty;
+        let ts = quote!(#ty).into_string();
+        let s = format!("{} could not be interpreted as {}", key, ts);
+        Lit::Str(s,StrStyle::Cooked)
+    }
+}
+
+pub fn de_optionalize (ty: &syn::Ty) -> (bool,syn::Ty) {
+    if let &Ty::Path(_, syn::Path{ref segments,..}) = ty {
+        if segments.len() == 1 && segments[0].ident == "Option" {
+            if let PathParameters::AngleBracketed(ref abpd) = segments[0].parameters {
+                if abpd.types.len() == 1 {
+                    if let syn::Ty::Path(_,_) = abpd.types[0] {
+                        return (true, abpd.types[0].clone())
+                    }
+                }
+            }
+        }
+    }
+    (false,ty.clone())
 }
 
 pub fn get_meta_items(attr: &syn::Attribute) -> Option<Vec<syn::NestedMetaItem>> {

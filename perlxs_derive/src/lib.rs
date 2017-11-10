@@ -9,7 +9,7 @@ extern crate perlxs_derive_internals;
 use perlxs_derive_internals as internals;
 
 use proc_macro::TokenStream;  
-use syn::{Ident, VariantData};
+use syn::{Ident, VariantData, Lit, StrStyle};
 
 #[proc_macro_derive(FromKeyValueStack, attributes(perlxs))]
 pub fn from_kv_stack(input: TokenStream) -> TokenStream {
@@ -19,9 +19,8 @@ pub fn from_kv_stack(input: TokenStream) -> TokenStream {
     // Build the impl
     let gen = impl_from_kv_stack(&ast);
     println!("Meow {}", gen.to_string());
-    TokenStream::empty()
     // Return the generated impl
-    //gen.parse().unwrap()
+    gen.parse().unwrap()
 }
 
 fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
@@ -56,32 +55,44 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
 
     for field in fields.iter(){
         let ident    = &field.ident;
-        let identval = ident.clone();
         let ty       = &field.ty;
         let var      = Ident::new(format!("value_{}", ident));
 
-        println!( "Got key attribute: {:?}", field );
+        println!( "Got field: {:?}", field );
 
         letvars.push(
             quote! {
-                let mut #identval = #ty::default();
+                let mut #var : Option<#ty> = None
             }
         );
 
-        paramvars.push(
-            quote! {
-                #ident: #identval,
-            }
-        );
+        if field.optional {
+            paramvars.push(
+                quote! {
+                    #ident: #var
+                }
+            );
+        }else{
+            let err_omitted = field.err_omitted();
+            paramvars.push(
+                quote! {
+                    #ident: #var.expect(#err_omitted)
+                }
+            );
+        }
 
         for key in field.keys.iter(){
+            let err_no_val     = field.err_no_val(key);
+            let err_parse_fail = field.err_parse_fail(key);
+            let keylit   = Lit::Str(key.to_string(),StrStyle::Cooked);
+
             matchparts.push(quote!{
-                #key => {
-                    let s_res = ctx.st_try_fetch::<#ty>(i+1).expect("no argument provided for parameter \"#ident\"");
-                    let v = s_res.expect("parameter #ident unable to be interpreted as a string");
+                #keylit => {
+                    let s_res = ctx.st_try_fetch::<#ty>(i+1).expect(#err_no_val);
+                    let v = s_res.expect(#err_parse_fail);
                     #var = Some( v );
                 }
-            })
+            });
         }
 
     }
@@ -93,17 +104,24 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
                 //define vars
                 #(#letvars;)*
 
+                let mut i = offset;
                 while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
                     match sv_res {
                         Ok(key) => { 
+                            println!("got {}", key);
+
                             match &*key {
                                 #(#matchparts,)*
+                                &_ => {
+                                    // Unknown key. Should we warn?
+                                }
                             }
                         },
                         Err(e) => {
                             panic!("paramter key is not a string {}", e);
                         }
                     }
+                    i += 2;
                 };
 
                 Self{

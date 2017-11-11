@@ -58,7 +58,7 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
         let ty       = &field.ty;
         let var      = Ident::new(format!("value_{}", ident));
 
-        println!( "Got field: {:?}", field );
+        //println!( "Got field: {:?}", field );
 
         letvars.push(
             quote! {
@@ -108,7 +108,7 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
                 while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
                     match sv_res {
                         Ok(key) => { 
-                            println!("got {}", key);
+                            //println!("got key {:?}", key);
 
                             match &*key {
                                 #(#matchparts,)*

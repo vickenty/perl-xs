@@ -1,4 +1,3 @@
-#![feature(slice_patterns)]
 
 extern crate syn;
 #[macro_use]

@@ -4,8 +4,8 @@ use perl_xs::context::Context;
 xs! {
     package XSTest::Codegen;
 
-    sub take_kv_struct(ctx, class: String) {
-        let teststruct = TestStruct::from_kv_stack(&mut ctx, 1);
+    sub take_kv_struct(ctx) {
+        let teststruct = TestStruct::from_kv_stack(&mut ctx, 0);
         format!("{:?}",teststruct)
     }
 }

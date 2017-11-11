@@ -130,43 +130,43 @@ fn get_string_from_lit(
 }
 
 
-struct Property<'c, T> {
-    errors: &'c Errors,
-    name: &'static str,
-    value: Option<T>,
-}
+// struct Property<'c, T> {
+//     errors: &'c Errors,
+//     name: &'static str,
+//     value: Option<T>,
+// }
 
-impl<'c, T> Property<'c, T> {
-    fn none(errors: &'c Errors, name: &'static str) -> Self {
-        Property {
-            errors: errors,
-            name: name,
-            value: None,
-        }
-    }
+// impl<'c, T> Property<'c, T> {
+//     fn none(errors: &'c Errors, name: &'static str) -> Self {
+//         Property {
+//             errors: errors,
+//             name: name,
+//             value: None,
+//         }
+//     }
 
-    fn set(&mut self, value: T) {
-        if self.value.is_some() {
-            self.errors
-                .error(format!("duplicate perlxs attribute `{}`", self.name));
-        } else {
-            self.value = Some(value);
-        }
-    }
+//     fn set(&mut self, value: T) {
+//         if self.value.is_some() {
+//             self.errors
+//                 .error(format!("duplicate perlxs attribute `{}`", self.name));
+//         } else {
+//             self.value = Some(value);
+//         }
+//     }
 
-    fn set_opt(&mut self, value: Option<T>) {
-        if let Some(value) = value {
-            self.set(value);
-        }
-    }
+//     fn set_opt(&mut self, value: Option<T>) {
+//         if let Some(value) = value {
+//             self.set(value);
+//         }
+//     }
 
-    fn set_if_none(&mut self, value: T) {
-        if self.value.is_none() {
-            self.value = Some(value);
-        }
-    }
+//     fn set_if_none(&mut self, value: T) {
+//         if self.value.is_none() {
+//             self.value = Some(value);
+//         }
+//     }
 
-    fn get(self) -> Option<T> {
-        self.value
-    }
-}
+//     fn get(self) -> Option<T> {
+//         self.value
+//     }
+// }

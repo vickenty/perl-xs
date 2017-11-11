@@ -7,7 +7,8 @@ require_ok("XSTest");
 my @kv;
 
 @kv = (alpha => 1, beta => "B", -charlie => "C", delta => 0, _echo => "E");
-is XSTest::Codegen::take_kv_struct(@kv), "", "take_kv_struct basic";
+my $expecting = 'TestStruct { alpha: true, beta: Some("B"), charlie: Some("C"), delta: Some(false), echo: Some("E") }';
+is XSTest::Codegen::take_kv_struct(@kv), $expecting, "take_kv_struct basic";
 
 done_testing;
 

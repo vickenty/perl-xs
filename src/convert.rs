@@ -43,7 +43,8 @@ impl<T> TryFromSV for T where T: FromSV {
 }
 
 /// Construct new `Self` from `key value pairs of the XSUB context`.
-pub trait FromKeyValueStack {
-    /// Check to make sure we have everything, and then do the conversion.
-    fn from_kv_stack( ctx: &mut Context, offset: isize ) -> Self;
+pub trait FromPerlKV {
+    /// create a struct from HV or key-value pairs on the stack, similar to a Moose constructor
+    /// offset is the starting positon in the stack we should consider
+    fn from_perl_kv( ctx: &mut Context, offset: isize ) -> Self;
 }

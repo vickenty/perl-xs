@@ -4,11 +4,12 @@ use warnings;
 use Test::More;
 require_ok("XSTest");
 
-my @kv;
-
-@kv = (alpha => 1, beta => "B", -charlie => "C", delta => 0, _echo => "E");
+my %kv = (alpha => 1, beta => "B", -charlie => "C", delta => 0, _echo => "E");
 my $expecting = 'TestStruct { alpha: true, beta: Some("B"), charlie: Some("C"), delta: Some(false), echo: Some("E") }';
-is XSTest::Derive::take_kv_struct(@kv), $expecting, "take_kv_struct basic";
+is XSTest::Derive::from_kv(%kv), $expecting, "from_kv keypairs";
+
+#TODO: Handle hashrefs
+#is XSTest::Derive::from_kv(\%kv), $expecting, "from_kv hashref";
 
 done_testing;
 

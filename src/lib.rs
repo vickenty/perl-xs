@@ -28,3 +28,5 @@ pub use raw::{ G_DISCARD, G_VOID };
 pub use scalar::{SV, DataRef};
 pub use array::AV;
 pub use hash::HV;
+pub use convert::FromPerlKV;
+pub use context::Context;

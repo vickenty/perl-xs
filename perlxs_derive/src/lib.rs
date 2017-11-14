@@ -2,6 +2,7 @@ extern crate proc_macro;
 extern crate syn;
 #[macro_use]
 extern crate quote;
+extern crate perl_xs;
 
 extern crate perlxs_derive_internals;
 use perlxs_derive_internals as internals;
@@ -9,19 +10,20 @@ use perlxs_derive_internals as internals;
 use proc_macro::TokenStream;  
 use syn::{Ident, VariantData, Lit, StrStyle};
 
-#[proc_macro_derive(FromKeyValueStack, attributes(perlxs))]
-pub fn from_kv_stack(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(FromPerlKV, attributes(perlxs))]
+pub fn from_kv(input: TokenStream) -> TokenStream {
 
     let ast = syn::parse_macro_input(&input.to_string()).unwrap();
 
     // Build the impl
-    let gen = impl_from_kv_stack(&ast);
-    println!("Meow {}", gen.to_string());
+    let gen = impl_from_kv(&ast);
+
+    //println!("Debug {}", gen.to_string());
     // Return the generated impl
     gen.parse().unwrap()
 }
 
-fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
     let vis = &ast.vis;
     let ident = &ast.ident;
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
@@ -72,6 +74,9 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
             );
         }else{
             let err_omitted = field.err_omitted();
+
+            // I'm not super in love with using expect for this.
+            // There's got to be a better way
             paramvars.push(
                 quote! {
                     #ident: #var.expect(#err_omitted)
@@ -95,38 +100,53 @@ fn impl_from_kv_stack(ast: &syn::MacroInput) -> quote::Tokens {
 
     }
 
-    quote! {
-        impl #impl_generics #ident #ty_generics #where_clause {
-            #vis fn from_kv_stack(ctx: &mut Context, offset: isize) -> Self
-            {
-                //define vars
-                #(#letvars;)*
-
-                let mut i = offset;
-                while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
-                    match sv_res {
-                        Ok(key) => { 
-                            //println!("got key {:?}", key);
-
-                            match &*key {
-                                #(#matchparts,)*
-                                &_ => {
-                                    // Unknown key. Should we warn?
-                                }
-                            }
-                        },
-                        Err(e) => {
-                            panic!("paramter key is not a string {}", e);
+    let from_kv_stack = quote!{
+        #(#letvars;)*
+        let mut i = offset;
+        while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
+            match sv_res {
+                Ok(key) => {
+                    match &*key {
+                        #(#matchparts,)*
+                        &_ => {
+                            // QUESTION: Unknown key. Should we warn?
                         }
                     }
-                    i += 2;
-                };
+                },
+                Err(e) => {
+                    panic!("paramter key is not a string {}", e);
+                }
+            }
+            i += 2;
+        };
 
-                Self{
-                    #(#paramvars,)*
+        Self{
+            #(#paramvars,)*
+        }
+    };
+    
+    let impl_block = quote! {
+        impl #impl_generics #ident #ty_generics #where_clause {
+            #vis fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Self
+            {
+                if let Some(Ok(_hv)) = ctx.st_try_fetch::<_perlxs::HV>(offset){
+                    // TODO: how do we each over the hv?
+                    unimplemented!()
+                }else{
+                    #from_kv_stack
                 }
             }
         }
+    };
+
+    let dummy_const = Ident::new(format!("_IMPL_PERLXS_FROMPERLKV_FOR_{}", ident));
+
+    quote! {
+        #[allow(non_upper_case_globals)]
+        const #dummy_const: () = {
+            extern crate perl_xs as _perlxs;
+            #impl_block
+        };
     }
 }
 

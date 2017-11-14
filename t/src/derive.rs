@@ -1,16 +1,14 @@
 
-use perl_xs::context::Context;
-
 xs! {
     package XSTest::Derive;
 
-    sub take_kv_struct(ctx) {
-        let teststruct = TestStruct::from_kv_stack(&mut ctx, 0);
+    sub from_kv(ctx) {
+        let teststruct = TestStruct::from_perl_kv(&mut ctx, 0); // Offset should be made automatic after arg unpacking
         format!("{:?}",teststruct)
     }
 }
 
-#[derive(FromKeyValueStack,Debug)]
+#[derive(FromPerlKV,Debug)]
 struct TestStruct {
     alpha:          bool,
     beta:           Option<String>,

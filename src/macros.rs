@@ -32,6 +32,7 @@ macro_rules! xs {
     ) => (
         $(
             pthx! {
+                #[allow(unused_mut)]
                 fn $name (pthx, _cv: *mut $crate::raw::CV) {
                     let perl = $crate::raw::initialize(pthx);
                     $crate::context::Context::wrap(perl, |mut $ctx| {

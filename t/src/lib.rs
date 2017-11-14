@@ -12,7 +12,7 @@ mod hash;
 mod panic;
 mod param;
 mod data;
-mod codegen;
+mod derive;
 
 xs! {
     bootstrap boot_XSTest;
@@ -23,5 +23,5 @@ xs! {
     use panic;
     use param;
     use data;
-    use codegen;
+    use derive;
 }

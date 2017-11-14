@@ -2,7 +2,7 @@
 use perl_xs::context::Context;
 
 xs! {
-    package XSTest::Codegen;
+    package XSTest::Derive;
 
     sub take_kv_struct(ctx) {
         let teststruct = TestStruct::from_kv_stack(&mut ctx, 0);

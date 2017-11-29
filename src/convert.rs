@@ -4,6 +4,7 @@ use std::fmt::Display;
 use raw;
 use SV;
 use context::Context;
+use error;
 
 /// Fast unsafe conversion from raw SV pointer.
 pub trait FromSV {
@@ -46,5 +47,6 @@ impl<T> TryFromSV for T where T: FromSV {
 pub trait FromPerlKV {
     /// create a struct from HV or key-value pairs on the stack, similar to a Moose constructor
     /// offset is the starting positon in the stack we should consider
-    fn from_perl_kv( ctx: &mut Context, offset: isize ) -> Result<Self,error::ToStructErr>;
+    fn from_perl_kv( ctx: &mut Context, offset: isize ) -> Result<Self,error::ToStructErr>
+        where Self: Sized;
 }

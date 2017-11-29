@@ -51,21 +51,36 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
     errors.check().unwrap();
 
     let mut letvars = Vec::new();
-    let mut paramvars = Vec::new();
     let mut matchparts = Vec::new();
+    let mut paramtests = Vec::new();
+    let mut paramvars  = Vec::new();
 
     for field in fields.iter(){
         let ident    = &field.ident;
         let ty       = &field.ty;
         let var      = Ident::new(format!("value_{}", ident));
-
-        //println!( "Got field: {:?}", field );
+        let ty_lit   = Lit::Str(quote!{#ty}.to_string(),StrStyle::Cooked);
+        let keys_lit : Vec<_> = field.keys.iter().map(|k| Lit::Str(k.to_string(),StrStyle::Cooked) ).collect();
 
         letvars.push(
             quote! {
                 let mut #var : Option<#ty> = None
             }
         );
+
+        for key in field.keys.iter(){
+            let key_lit   = Lit::Str(key.to_string(),StrStyle::Cooked);
+
+            matchparts.push(quote!{
+                #key_lit => {
+                    match ctx.st_try_fetch::<#ty>(i+1) {
+                        Some(Ok(v))  => #var = Some( v ),
+                        Some(Err(e)) => errors.push(_perlxs::error::ToStructErrPart::ParseFail{key: #key_lit, ty: #ty_lit, error: e}),
+                        None         => errors.push(_perlxs::error::ToStructErrPart::OmittedValue(#key_lit)),
+                    }
+                }
+            });
+        }
 
         if field.optional {
             paramvars.push(
@@ -74,13 +89,12 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
                 }
             );
         }else{
-            let keys_lit    : Vec<_> = field.keys.map(|k| Lit::Str(k.to_string(),StrStyle::Cooked) ).collect();
 
             paramtests.push(
                 quote!{
                     if #var.is_none() {
-                        errors.push(_perlxs::error::ToStructErr::OmittedField([#(#keys_lit,)*]))
-                    }
+                        errors.push(_perlxs::error::ToStructErrPart:: Field([#(keys_lit),*]));
+                    };
                 }
             );
 
@@ -91,30 +105,9 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
             );
         }
 
-        for key in field.keys.iter(){
-            let err_no_val     = field.err_no_val(key);
-            let err_parse_fail = field.err_parse_fail(key);
-
-            let keylit   = Lit::Str(key.to_string(),StrStyle::Cooked);
-
-            matchparts.push(quote!{
-                #keylit => {
-                    match ctx.st_try_fetch::<#ty>(i+1) {
-                        Some(Ok(v))  => #var = Some( v ),
-                        None         => {},
-                        Some(Err(e)) => 
-                    }
-                    let s_res = ;.expect(#err_no_val);
-                    let v = s_res.expect(#err_parse_fail);
-                    
-                }
-            });
-        }
-
     }
 
     let from_kv_stack = quote!{
-        #(#letvars;)*
 
         let mut errors = Vec::<_perlxs::error::ToStructErrPart>::new();
 
@@ -136,7 +129,7 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
             i += 2;
         };
 
-        #paramtests
+        #(#paramtests;)*
 
         if errors.len() {
             return Err(_perlxs::error::ToStructErr{
@@ -146,7 +139,7 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
         }
 
         Ok(Self{
-            #(#paramvars,)*
+            #(paramvars,)*
         })
     };
     
@@ -154,6 +147,7 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
         impl #impl_generics _perlxs::FromPerlKV for #ident #ty_generics #where_clause {
             #vis fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Result<Self,_perlxs::error::ToStructErr>
             {
+                #(#letvars;)*
                 #from_kv_stack
             }
         }

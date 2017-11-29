@@ -1,16 +1,30 @@
-use std::fmt::{self, Display};
+//! Misc errors
 
+use std::fmt;
+
+/// Error instantiating a rust struct from a perl stack
 #[derive(Debug)]
 pub struct ToStructErr {
     name: &'static str,
     errors: Vec<ToStructErrPart>
 }
 
+/// Partial error instantiating a rust struct from a perl stack
 #[derive(Debug)]
 pub enum ToStructErrPart {
-    OmittedField(&'static [&'static str]),
+    /// A list of keys one of which must be specified
+    OmittedKey(&'static [&'static str]),
+    /// A key for which a value was not specified
     OmittedValue(&'static str),
-    ParseFail(&'static str, &'static str),
+    /// Information about the failure to parse a key
+    ParseFail{
+        /// The key that was unable to be parsed
+        key:   &'static str,
+        /// the type of the field to which the key refers
+        ty:    &'static str,
+        /// Error message returned by the FromSV trait
+        error: &'static str,
+    },
 }
 
 impl fmt::Display for ToStructErr {
@@ -21,18 +35,18 @@ impl fmt::Display for ToStructErr {
         
         for e in self.errors.iter() {
             match *e {
-                OmittedField(ref names) => {
-                    let s = if names.len() == 1 {
-                        writeln!(f,"Missing field: \t{:?}", names[0])
+                OmittedKey(ref names) => {
+                    if names.len() == 1 {
+                        writeln!(f,"Missing field: \t{:?}", names[0]);
                     }else{
-                        writeln!(f,"\tMissing one of the following fields: {:?}", names)
+                        writeln!(f,"\tMissing one of the following fields: {:?}", names);
                     };
                 },
                 OmittedValue(ref name) => {
-                    writeln!(f,"\tValue is required for: {}", name)
+                    writeln!(f,"\tValue is required for: {}", name);
                 },
-                ParseFail(ref name, ref err) => {
-                    writeln!(f,"\tFailed to parse field {}: {}", name, err);
+                ParseFail{ ref key, ref ty, ref error } => {
+                    writeln!(f,"\tFailed to parse field {} as {}: {}", key, ty, error);
                 }
             }
         }

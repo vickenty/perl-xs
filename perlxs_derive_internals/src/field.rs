@@ -66,16 +66,6 @@ impl Field {
             optional:  optional,
         }
     }
-    pub fn err_no_val(&self,key: &String) -> Lit {
-        let s = format!("No value specified for {}", key);
-        Lit::Str(s,StrStyle::Cooked)
-    }
-    pub fn err_parse_fail (&self, key: &String) -> Lit {
-        let ty = &self.ty;
-        let ts = quote!(#ty).into_string();
-        let s = format!("{} could not be interpreted as {}", key, ts);
-        Lit::Str(s,StrStyle::Cooked)
-    }
 }
 
 pub fn de_optionalize (ty: &syn::Ty) -> (bool,syn::Ty) {

@@ -18,7 +18,7 @@ pub fn from_kv(input: TokenStream) -> TokenStream {
     // Build the impl
     let gen = impl_from_kv(&ast);
 
-    //println!("Debug {}", gen.to_string());
+    println!("Debug {}", gen.to_string());
     // Return the generated impl
     gen.parse().unwrap()
 }
@@ -26,6 +26,7 @@ pub fn from_kv(input: TokenStream) -> TokenStream {
 fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
     let vis = &ast.vis;
     let ident = &ast.ident;
+    let ident_lit = Lit::Str(ast.ident.to_string(),StrStyle::Cooked);
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
     // create a vector containing the names of all fields on the struct
@@ -73,13 +74,19 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
                 }
             );
         }else{
-            let err_omitted = field.err_omitted();
+            let keys_lit    : Vec<_> = field.keys.map(|k| Lit::Str(k.to_string(),StrStyle::Cooked) ).collect();
 
-            // I'm not super in love with using expect for this.
-            // There's got to be a better way
+            paramtests.push(
+                quote!{
+                    if #var.is_none() {
+                        errors.push(_perlxs::error::ToStructErr::OmittedField([#(#keys_lit,)*]))
+                    }
+                }
+            );
+
             paramvars.push(
                 quote! {
-                    #ident: #var.expect(#err_omitted)
+                    #ident: #var.unwrap()
                 }
             );
         }
@@ -87,13 +94,19 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
         for key in field.keys.iter(){
             let err_no_val     = field.err_no_val(key);
             let err_parse_fail = field.err_parse_fail(key);
+
             let keylit   = Lit::Str(key.to_string(),StrStyle::Cooked);
 
             matchparts.push(quote!{
                 #keylit => {
-                    let s_res = ctx.st_try_fetch::<#ty>(i+1).expect(#err_no_val);
+                    match ctx.st_try_fetch::<#ty>(i+1) {
+                        Some(Ok(v))  => #var = Some( v ),
+                        None         => {},
+                        Some(Err(e)) => 
+                    }
+                    let s_res = ;.expect(#err_no_val);
                     let v = s_res.expect(#err_parse_fail);
-                    #var = Some( v );
+                    
                 }
             });
         }
@@ -102,6 +115,9 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
 
     let from_kv_stack = quote!{
         #(#letvars;)*
+
+        let mut errors = Vec::<_perlxs::error::ToStructErrPart>::new();
+
         let mut i = offset;
         while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
             match sv_res {
@@ -120,14 +136,23 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
             i += 2;
         };
 
-        Self{
-            #(#paramvars,)*
+        #paramtests
+
+        if errors.len() {
+            return Err(_perlxs::error::ToStructErr{
+                name: #ident_lit,
+                errors: errors
+            });
         }
+
+        Ok(Self{
+            #(#paramvars,)*
+        })
     };
     
     let impl_block = quote! {
         impl #impl_generics _perlxs::FromPerlKV for #ident #ty_generics #where_clause {
-            #vis fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Self
+            #vis fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Result<Self,_perlxs::error::ToStructErr>
             {
                 #from_kv_stack
             }

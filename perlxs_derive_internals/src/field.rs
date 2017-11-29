@@ -66,15 +66,6 @@ impl Field {
             optional:  optional,
         }
     }
-    pub fn err_omitted(&self) -> Lit {
-        let s = if self.keys.len() == 1 {
-            format!("{:?} must be specified", self.keys[0])
-        }else{
-            format!("One of the following must be specified: {:?}", self.keys)
-        };
-
-        Lit::Str(s,StrStyle::Cooked)
-    }
     pub fn err_no_val(&self,key: &String) -> Lit {
         let s = format!("No value specified for {}", key);
         Lit::Str(s,StrStyle::Cooked)

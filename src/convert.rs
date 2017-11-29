@@ -46,5 +46,5 @@ impl<T> TryFromSV for T where T: FromSV {
 pub trait FromPerlKV {
     /// create a struct from HV or key-value pairs on the stack, similar to a Moose constructor
     /// offset is the starting positon in the stack we should consider
-    fn from_perl_kv( ctx: &mut Context, offset: isize ) -> Self;
+    fn from_perl_kv( ctx: &mut Context, offset: isize ) -> Result<Self,error::ToStructErr>;
 }

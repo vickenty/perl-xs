@@ -19,6 +19,7 @@ mod array;
 mod hash;
 pub mod context;
 pub mod convert;
+pub mod error;
 
 #[doc(hidden)]
 pub mod croak;

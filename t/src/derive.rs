@@ -4,7 +4,7 @@ xs! {
     package XSTest::Derive;
 
     sub from_kv(ctx) {
-        let teststruct = TestStruct::from_perl_kv(&mut ctx, 0); // Offset should be made automatic after arg unpacking
+        let teststruct = TestStruct::from_perl_kv(&mut ctx, 0).unwrap(); // Offset should be made automatic after arg unpacking
         format!("{:?}",teststruct)
     }
 }

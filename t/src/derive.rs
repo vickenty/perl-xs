@@ -1,3 +1,4 @@
+use perl_xs::FromPerlKV;
 
 xs! {
     package XSTest::Derive;

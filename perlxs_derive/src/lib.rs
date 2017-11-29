@@ -126,15 +126,10 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
     };
     
     let impl_block = quote! {
-        impl #impl_generics #ident #ty_generics #where_clause {
+        impl #impl_generics _perlxs::FromPerlKV for #ident #ty_generics #where_clause {
             #vis fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Self
             {
-                if let Some(Ok(_hv)) = ctx.st_try_fetch::<_perlxs::HV>(offset){
-                    // TODO: how do we each over the hv?
-                    unimplemented!()
-                }else{
-                    #from_kv_stack
-                }
+                #from_kv_stack
             }
         }
     };

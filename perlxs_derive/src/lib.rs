@@ -18,7 +18,6 @@ pub fn from_kv(input: TokenStream) -> TokenStream {
     // Build the impl
     let gen = impl_from_kv(&ast);
 
-    println!("Debug {}", gen.to_string());
     // Return the generated impl
     gen.parse().unwrap()
 }
@@ -60,6 +59,8 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
         let ty       = &field.ty;
         let var      = Ident::new(format!("value_{}", ident));
         let ty_lit   = Lit::Str(quote!{#ty}.to_string(),StrStyle::Cooked);
+
+        #[allow(unused_variables)]
         let keys_lit : Vec<_> = field.keys.iter().map(|k| Lit::Str(k.to_string(),StrStyle::Cooked) ).collect();
 
         letvars.push(
@@ -74,9 +75,15 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
             matchparts.push(quote!{
                 #key_lit => {
                     match ctx.st_try_fetch::<#ty>(i+1) {
-                        Some(Ok(v))  => #var = Some( v ),
-                        Some(Err(e)) => errors.push(_perlxs::error::ToStructErrPart::ParseFail{key: #key_lit, ty: #ty_lit, error: e}),
-                        None         => errors.push(_perlxs::error::ToStructErrPart::OmittedValue(#key_lit)),
+                        Some(Ok(v))  => {
+                            #var = Some( v );
+                        },
+                        Some(Err(e)) => {
+                            errors.push(_perlxs::error::ToStructErrPart::ValueParseFail{key: #key_lit, ty: #ty_lit, error: e.to_string(), offset: i+1});
+                        },
+                        None         => {
+                            errors.push(_perlxs::error::ToStructErrPart::OmittedValue(#key_lit));
+                        },
                     }
                 }
             });
@@ -89,11 +96,10 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
                 }
             );
         }else{
-
             paramtests.push(
                 quote!{
                     if #var.is_none() {
-                        errors.push(_perlxs::error::ToStructErrPart:: Field([#(keys_lit),*]));
+                        errors.push(_perlxs::error::ToStructErrPart::OmittedKey(&[#(#keys_lit),*]));
                     };
                 }
             );
@@ -109,8 +115,6 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
 
     let from_kv_stack = quote!{
 
-        let mut errors = Vec::<_perlxs::error::ToStructErrPart>::new();
-
         let mut i = offset;
         while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
             match sv_res {
@@ -118,37 +122,40 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
                     match &*key {
                         #(#matchparts,)*
                         &_ => {
-                            // QUESTION: Unknown key. Should we warn?
+                            // Unknown key. Should we warn?
                         }
                     }
                 },
                 Err(e) => {
-                    panic!("paramter key is not a string {}", e);
+                    //TODO
+                    errors.push(_perlxs::error::ToStructErrPart::KeyParseFail{ offset: i, ty: "String", error: e.to_string() });
                 }
             }
             i += 2;
         };
 
-        #(#paramtests;)*
-
-        if errors.len() {
-            return Err(_perlxs::error::ToStructErr{
-                name: #ident_lit,
-                errors: errors
-            });
-        }
-
-        Ok(Self{
-            #(paramvars,)*
-        })
     };
     
     let impl_block = quote! {
         impl #impl_generics _perlxs::FromPerlKV for #ident #ty_generics #where_clause {
             #vis fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Result<Self,_perlxs::error::ToStructErr>
             {
+                // : Vec<_perlxs::error::ToStructErrPart>
+                let mut errors = Vec::new();
                 #(#letvars;)*
                 #from_kv_stack
+                #(#paramtests;)*
+
+                if errors.len() > 0 {
+                    return Err(_perlxs::error::ToStructErr{
+                        name: #ident_lit,
+                        errors: errors
+                    });
+                }
+
+                Ok(Self{
+                    #(#paramvars,)*
+                })
             }
         }
     };
@@ -163,64 +170,3 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
         };
     }
 }
-
-// impl FromKeyValueStack for DBRBuilder {
-
-//     fn from_kv_stack ( ctx: &mut Context, offset: isize ) -> Self {
-
-//         let mut logger : Option<String> = None;
-//         let mut conf   : Option<String> = None;
-//         let mut admin    = false;
-//         let mut fudge_tz = false;
-
-//         let mut i = offset;
-
-//         while let Some(sv_res) = ctx.st_try_fetch::<String>(i) {
-//             match sv_res {
-//                 Ok(key) => { 
-//                     match &*key {
-//                         "-logger" => {
-//                             let s_res = ctx.st_try_fetch::<String>(i+1).expect("no argument provided for parameter \"{}\"");
-//                             let v = s_res.expect("parameter {} unable to be interpreted as a string");
-//                             logger = Some( v );
-//                         }
-//                         "-conf"   => {
-//                             let s_res = ctx.st_try_fetch::<String>(i+1).expect("no argument provided for parameter \"{}\"");
-//                             let v = s_res.expect("parameter {} unable to be interpreted as a string");
-//                             conf = Some( v );
-//                         }
-//                         "-admin" => {
-//                             let s_res = ctx.st_try_fetch::<bool>(i+1).expect("no argument provided for parameter \"{}\"");
-//                             let v = s_res.expect("parameter {} unable to be interpreted as a bool");
-//                             admin = v;
-//                         }
-//                         "-fudge_tz" => {
-//                             let s_res = ctx.st_try_fetch::<bool>(i+1).expect("no argument provided for parameter \"{}\"");
-//                             let v = s_res.expect("parameter {} unable to be interpreted as a bool");
-//                             fudge_tz = v;
-//                         },
-//                         _ => {
-//                             panic!("unsupported parameter {}",key);
-//                         }
-//                     }
-//                 },
-//                 Err(e) => {
-//                     panic!("paramter key is not a string {}", e);
-//                 }
-//             }
-
-//             i += 2;
-//         }
-
-//         Self{
-//             use_exceptions: true,
-//             app:            None,
-//             conf:           conf,
-//             logpath:        None,
-//             loglevel:       None,
-//             logger:         logger,
-//             admin:          admin,
-//             fudge_tz:       fudge_tz,
-//         }
-//     }
-// }

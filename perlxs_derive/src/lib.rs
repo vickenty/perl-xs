@@ -138,7 +138,7 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
     
     let impl_block = quote! {
         impl #impl_generics _perlxs::FromPerlKV for #ident #ty_generics #where_clause {
-            #vis fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Result<Self,_perlxs::error::ToStructErr>
+            fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Result<Self,_perlxs::error::ToStructErr>
             {
                 // : Vec<_perlxs::error::ToStructErrPart>
                 let mut errors = Vec::new();

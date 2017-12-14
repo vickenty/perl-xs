@@ -23,13 +23,9 @@ pub fn from_kv(input: TokenStream) -> TokenStream {
 }
 
 fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
-    let vis = &ast.vis;
     let ident = &ast.ident;
     let ident_lit = Lit::Str(ast.ident.to_string(),StrStyle::Cooked);
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
-
-    // create a vector containing the names of all fields on the struct
-    //    let dummy_const = Ident::new(format!("_IMPL_DESERIALIZE_FOR_{}", ident));
 
     let errors = internals::error::Errors::new();
 
@@ -122,13 +118,17 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
                     match &*key {
                         #(#matchparts,)*
                         &_ => {
-                            // Unknown key. Should we warn?
+                            // TODO: Warn for unknown key.
                         }
                     }
                 },
                 Err(e) => {
-                    //TODO
-                    errors.push(_perlxs::error::ToStructErrPart::KeyParseFail{ offset: i, ty: "String", error: e.to_string() });
+                    errors.push(
+                        _perlxs::error::ToStructErrPart::KeyParseFail{
+                            offset: i,
+                            ty: "String",
+                            error: e.to_string()
+                        });
                 }
             }
             i += 2;
@@ -140,7 +140,6 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
         impl #impl_generics _perlxs::FromPerlKV for #ident #ty_generics #where_clause {
             fn from_perl_kv(ctx: &mut _perlxs::Context, offset: isize) -> Result<Self,_perlxs::error::ToStructErr>
             {
-                // : Vec<_perlxs::error::ToStructErrPart>
                 let mut errors = Vec::new();
                 #(#letvars;)*
                 #from_kv_stack

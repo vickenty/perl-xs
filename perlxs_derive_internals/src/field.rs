@@ -1,8 +1,7 @@
 use syn;
-use syn::MetaItem::{List, NameValue, Word};
+use syn::MetaItem::{List, NameValue};
 use syn::NestedMetaItem::{Literal, MetaItem};
-use syn::{Ident,Ty,Lit,StrStyle,AngleBracketedParameterData,PathParameters,PathSegment};
-use quote::ToTokens;
+use syn::{Ty,PathParameters};
 
 use error::Errors;
 
@@ -109,45 +108,3 @@ fn get_string_from_lit(
         Err(())
     }
 }
-
-
-// struct Property<'c, T> {
-//     errors: &'c Errors,
-//     name: &'static str,
-//     value: Option<T>,
-// }
-
-// impl<'c, T> Property<'c, T> {
-//     fn none(errors: &'c Errors, name: &'static str) -> Self {
-//         Property {
-//             errors: errors,
-//             name: name,
-//             value: None,
-//         }
-//     }
-
-//     fn set(&mut self, value: T) {
-//         if self.value.is_some() {
-//             self.errors
-//                 .error(format!("duplicate perlxs attribute `{}`", self.name));
-//         } else {
-//             self.value = Some(value);
-//         }
-//     }
-
-//     fn set_opt(&mut self, value: Option<T>) {
-//         if let Some(value) = value {
-//             self.set(value);
-//         }
-//     }
-
-//     fn set_if_none(&mut self, value: T) {
-//         if self.value.is_none() {
-//             self.value = Some(value);
-//         }
-//     }
-
-//     fn get(self) -> Option<T> {
-//         self.value
-//     }
-// }

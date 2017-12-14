@@ -18,7 +18,7 @@ pub enum ToStructErrPart {
     OmittedKey(&'static [&'static str]),
     /// A key for which a value was not specified
     OmittedValue(&'static str),
-    ///
+    /// Was unable to parse the key of a key-value-pair
     KeyParseFail{
         /// stack offset of the key that was not able to be parsed
         offset: isize,

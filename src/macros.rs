@@ -32,9 +32,10 @@ macro_rules! xs {
     ) => (
         $(
             pthx! {
+                #[allow(unused_mut)]
                 fn $name (pthx, _cv: *mut $crate::raw::CV) {
                     let perl = $crate::raw::initialize(pthx);
-                    $crate::context::Context::wrap(perl, |$ctx| {
+                    $crate::context::Context::wrap(perl, |mut $ctx| {
                         let mut _arg = 0;
                         $(
                             let $par = match $ctx.st_try_fetch::<$pty>(_arg) {

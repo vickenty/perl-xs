@@ -19,6 +19,7 @@ mod array;
 mod hash;
 pub mod context;
 pub mod convert;
+pub mod error;
 
 #[doc(hidden)]
 pub mod croak;
@@ -28,3 +29,5 @@ pub use raw::{ G_DISCARD, G_VOID };
 pub use scalar::{SV, DataRef};
 pub use array::AV;
 pub use hash::HV;
+pub use convert::FromPerlKV;
+pub use context::Context;

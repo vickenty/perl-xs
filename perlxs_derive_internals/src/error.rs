@@ -1,6 +1,5 @@
-
-use std::fmt::Display;
 use std::cell::RefCell;
+use std::fmt::Display;
 
 #[derive(Default)]
 pub struct Errors {
@@ -9,7 +8,9 @@ pub struct Errors {
 
 impl Errors {
     pub fn new() -> Self {
-        Errors { errors: RefCell::new(Some(Vec::new())) }
+        Errors {
+            errors: RefCell::new(Some(Vec::new())),
+        }
     }
 
     pub fn error<T: Display>(&self, msg: T) {

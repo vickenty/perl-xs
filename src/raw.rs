@@ -6,15 +6,16 @@ use std::panic;
 use std::ptr;
 
 use perl_sys;
+pub use perl_sys::consts::*;
 pub use perl_sys::initialize;
 pub use perl_sys::types::*;
-pub use perl_sys::consts::*;
 
 pub type Interpreter = perl_sys::Perl;
 pub type Stack = OuroborosStack;
 
 pub unsafe fn catch_unwind<F, T>(perl: Interpreter, f: F) -> T
-    where F: FnOnce() -> T + panic::UnwindSafe
+where
+    F: FnOnce() -> T + panic::UnwindSafe,
 {
     let res = panic::catch_unwind(f);
     match res {
@@ -46,7 +47,14 @@ unsafe fn rethrow_panic(perl: Interpreter, e: Box<any::Any>) -> ! {
     unreachable!();
 }
 
-unsafe fn make_error_sv<T>(perl: Interpreter, e: T) -> *mut SV where T: AsRef<str> {
+unsafe fn make_error_sv<T>(perl: Interpreter, e: T) -> *mut SV
+where
+    T: AsRef<str>,
+{
     let s = e.as_ref();
-    perl.newSVpvn_flags(s.as_ptr() as *const _, s.len() as STRLEN, SVs_TEMP | SVf_UTF8)
+    perl.newSVpvn_flags(
+        s.as_ptr() as *const _,
+        s.len() as STRLEN,
+        SVs_TEMP | SVf_UTF8,
+    )
 }

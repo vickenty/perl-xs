@@ -24,10 +24,10 @@ pub mod error;
 #[doc(hidden)]
 pub mod croak;
 
-pub use raw::{ IV, UV, NV, Size_t, SSize_t, STRLEN };
-pub use raw::{ G_DISCARD, G_VOID };
-pub use scalar::{SV, DataRef};
 pub use array::AV;
-pub use hash::HV;
-pub use convert::FromPerlKV;
 pub use context::Context;
+pub use convert::FromPerlKV;
+pub use hash::HV;
+pub use raw::{G_DISCARD, G_VOID};
+pub use raw::{SSize_t, Size_t, IV, NV, STRLEN, UV};
+pub use scalar::{DataRef, SV};

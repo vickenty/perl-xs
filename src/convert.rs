@@ -1,10 +1,10 @@
 //! Traits for converting to and from Perl scalars.
 
-use std::fmt::Display;
-use raw;
 use SV;
 use context::Context;
 use error;
+use raw;
+use std::fmt::Display;
 
 /// Fast unsafe conversion from raw SV pointer.
 pub trait FromSV {
@@ -18,7 +18,10 @@ pub trait IntoSV {
     fn into_sv(self, perl: raw::Interpreter) -> SV;
 }
 
-impl<T> IntoSV for Option<T> where T: IntoSV {
+impl<T> IntoSV for Option<T>
+where
+    T: IntoSV,
+{
     fn into_sv(self, perl: raw::Interpreter) -> SV {
         match self {
             Some(inner) => inner.into_sv(perl),
@@ -35,10 +38,12 @@ pub trait TryFromSV: Sized {
     unsafe fn try_from_sv(perl: raw::Interpreter, raw: *mut raw::SV) -> Result<Self, Self::Error>;
 }
 
-impl<T> TryFromSV for T where T: FromSV {
+impl<T> TryFromSV for T
+where
+    T: FromSV,
+{
     type Error = &'static str;
-    unsafe fn try_from_sv(perl: raw::Interpreter, raw: *mut raw::SV) -> Result<T, Self::Error>
-    {
+    unsafe fn try_from_sv(perl: raw::Interpreter, raw: *mut raw::SV) -> Result<T, Self::Error> {
         Ok(T::from_sv(perl, raw))
     }
 }
@@ -47,6 +52,7 @@ impl<T> TryFromSV for T where T: FromSV {
 pub trait FromPerlKV {
     /// create a struct from HV or key-value pairs on the stack, similar to a Moose constructor
     /// offset is the starting positon in the stack we should consider
-    fn from_perl_kv( ctx: &mut Context, offset: isize ) -> Result<Self,error::ToStructErr>
-        where Self: Sized;
+    fn from_perl_kv(ctx: &mut Context, offset: isize) -> Result<Self, error::ToStructErr>
+    where
+        Self: Sized;
 }

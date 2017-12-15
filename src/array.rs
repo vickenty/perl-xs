@@ -1,18 +1,22 @@
 use std::marker::PhantomData;
 
+use SV;
+use convert::{FromSV, TryFromSV};
 use handle::Owned;
 use raw;
-use raw::{ SSize_t };
-use SV;
-use convert::{ FromSV, TryFromSV };
+use raw::SSize_t;
 
 /// Perl array object.
 pub struct AV(Owned<raw::AV>);
 
 impl AV {
-    fn pthx(&self) -> raw::Interpreter { self.0.pthx() }
+    fn pthx(&self) -> raw::Interpreter {
+        self.0.pthx()
+    }
 
-    fn as_ptr(&self) -> *mut raw::AV { self.0.as_ptr() }
+    fn as_ptr(&self) -> *mut raw::AV {
+        self.0.as_ptr()
+    }
 
     method! {
         /// Empty the array, preserving underlying allocation.
@@ -107,7 +111,9 @@ impl AV {
         unsafe {
             let raw = val.into_raw();
             let svpp = self.pthx().av_store(self.as_ptr(), key, raw);
-            if svpp.is_null() { self.pthx().ouroboros_sv_refcnt_dec(raw) }
+            if svpp.is_null() {
+                self.pthx().ouroboros_sv_refcnt_dec(raw)
+            }
         }
     }
 
@@ -139,7 +145,10 @@ impl TryFromSV for AV {
             return Err("not an array reference");
         }
 
-        Ok(AV::from_raw_borrowed(pthx, pthx.ouroboros_sv_rv(raw) as *mut _))
+        Ok(AV::from_raw_borrowed(
+            pthx,
+            pthx.ouroboros_sv_rv(raw) as *mut _,
+        ))
     }
 }
 

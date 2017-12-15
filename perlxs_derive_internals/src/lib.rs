@@ -1,4 +1,3 @@
-
 extern crate syn;
 
 pub mod error;

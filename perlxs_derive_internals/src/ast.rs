@@ -1,6 +1,6 @@
-use syn;
-use field::Field;
 use error::Errors;
+use field::Field;
+use syn;
 
 // fn struct_from_ast<'a>(cx: &Ctxt, data: &'a syn::VariantData, attrs: Option<&attr::Variant>) -> (Style, Vec<Field<'a>>) {
 //     match *data {
@@ -17,8 +17,6 @@ pub fn fields_from_ast<'a>(errors: &Errors, fields: &'a [syn::Field]) -> Vec<Fie
     fields
         .iter()
         .enumerate()
-        .map(
-            |(i, field)| Field::from_ast(errors, i, field)
-        )
+        .map(|(i, field)| Field::from_ast(errors, i, field))
         .collect()
 }

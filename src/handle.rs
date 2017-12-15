@@ -1,7 +1,7 @@
 //! Smart wrappers for pointers managed by Perl.
 
+use raw::{Interpreter, AV, HV, SV};
 use std::ops::Deref;
-use raw::{ Interpreter, SV, AV, HV };
 
 /// Marker trait for types that are reference counted by Perl
 pub trait HasRefCnt {}
@@ -19,10 +19,14 @@ impl<T: HasRefCnt> Ref<T> {
     }
 
     #[inline]
-    pub fn pthx(&self) -> Interpreter { self.0 }
+    pub fn pthx(&self) -> Interpreter {
+        self.0
+    }
 
     #[inline]
-    pub fn as_ptr(&self) -> *mut T { self.1 }
+    pub fn as_ptr(&self) -> *mut T {
+        self.1
+    }
 
     #[inline]
     pub fn incref(&self) {

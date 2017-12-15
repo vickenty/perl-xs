@@ -1,14 +1,18 @@
-use handle::Owned;
-use convert::{ TryFromSV };
-use raw;
 use SV;
+use convert::TryFromSV;
+use handle::Owned;
+use raw;
 
 /// Perl hash object.
 pub struct HV(Owned<raw::HV>);
 
 impl HV {
-    fn pthx(&self) -> raw::Interpreter { self.0.pthx() }
-    fn as_ptr(&self) -> *mut raw::HV { self.0.as_ptr() }
+    fn pthx(&self) -> raw::Interpreter {
+        self.0.pthx()
+    }
+    fn as_ptr(&self) -> *mut raw::HV {
+        self.0.as_ptr()
+    }
 
     method! {
         /// Frees the all the elements of a hash, leaving it empty.
@@ -70,8 +74,16 @@ impl HV {
     pub fn store(&self, key: &str, val: SV) {
         unsafe {
             let raw = val.into_raw();
-            let svpp = self.pthx().hv_store(self.as_ptr(), key.as_ptr() as *const _, -(key.len() as raw::I32), raw, 0);
-            if svpp.is_null() { self.pthx().ouroboros_sv_refcnt_dec(raw) }
+            let svpp = self.pthx().hv_store(
+                self.as_ptr(),
+                key.as_ptr() as *const _,
+                -(key.len() as raw::I32),
+                raw,
+                0,
+            );
+            if svpp.is_null() {
+                self.pthx().ouroboros_sv_refcnt_dec(raw)
+            }
         }
     }
 
@@ -98,6 +110,9 @@ impl TryFromSV for HV {
             return Err("not a hash reference");
         }
 
-        Ok(HV::from_raw_borrowed(pthx, pthx.ouroboros_sv_rv(raw) as *mut _))
+        Ok(HV::from_raw_borrowed(
+            pthx,
+            pthx.ouroboros_sv_rv(raw) as *mut _,
+        ))
     }
 }

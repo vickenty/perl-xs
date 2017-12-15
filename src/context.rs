@@ -1,8 +1,8 @@
 //! Context for XS subroutine calls.
-use std;
+use {AV, SV};
+use convert::{FromSV, IntoSV, TryFromSV};
 use raw;
-use { AV, SV };
-use convert::{ FromSV, IntoSV, TryFromSV };
+use std;
 use std::ffi::CStr;
 
 /// XS call context.
@@ -11,7 +11,7 @@ pub struct Context {
     stack: raw::Stack,
 }
 
-const EMPTY: &'static [i8] = &[ 0 ];
+const EMPTY: &'static [i8] = &[0];
 
 
 impl Context {
@@ -34,8 +34,9 @@ impl Context {
     /// Perl documentation).
     #[inline]
     pub fn wrap<R, F>(perl: raw::Interpreter, f: F)
-        where R: Stackable,
-              F: FnOnce(&mut Self) -> R + std::panic::UnwindSafe
+    where
+        R: Stackable,
+        F: FnOnce(&mut Self) -> R + std::panic::UnwindSafe,
     {
         unsafe {
             raw::catch_unwind(perl, || {
@@ -77,7 +78,8 @@ impl Context {
         if idx >= self.st_items() {
             return None;
         }
-        let svp = self.perl.ouroboros_stack_fetch(&mut self.stack, idx as raw::SSize_t);
+        let svp = self.perl
+            .ouroboros_stack_fetch(&mut self.stack, idx as raw::SSize_t);
         if svp.is_null() {
             return None;
         }
@@ -89,20 +91,22 @@ impl Context {
     ///
     /// See: [`ST`](http://perldoc.perl.org/perlapi.html#ST).
     #[inline]
-    pub fn st_fetch<T>(&mut self, idx: isize) -> Option<T> where T: FromSV
+    pub fn st_fetch<T>(&mut self, idx: isize) -> Option<T>
+    where
+        T: FromSV,
     {
-        unsafe {
-            self.st_fetch_raw(idx).map(|svp| T::from_sv(self.perl, svp))
-        }
+        unsafe { self.st_fetch_raw(idx).map(|svp| T::from_sv(self.perl, svp)) }
     }
 
     /// Fetch value from the Perl stack and try to convert to `T`.
     #[inline]
-    pub fn st_try_fetch<T>(&mut self,idx: isize) -> Option<Result<T, T::Error>>
-        where T: TryFromSV
+    pub fn st_try_fetch<T>(&mut self, idx: isize) -> Option<Result<T, T::Error>>
+    where
+        T: TryFromSV,
     {
         unsafe {
-            self.st_fetch_raw(idx).map(|svp| T::try_from_sv(self.perl, svp))
+            self.st_fetch_raw(idx)
+                .map(|svp| T::try_from_sv(self.perl, svp))
         }
     }
 
@@ -110,9 +114,15 @@ impl Context {
     ///
     /// See: [`mXPUSHs`](http://perldoc.perl.org/perlapi.html#mXPUSHs).
     #[inline]
-    pub fn st_push<T>(&mut self, val: T) where T: IntoSV {
+    pub fn st_push<T>(&mut self, val: T)
+    where
+        T: IntoSV,
+    {
         let sv = val.into_sv(self.perl);
-        unsafe { self.perl.ouroboros_stack_xpush_sv_mortal(&mut self.stack, sv.into_raw()) };
+        unsafe {
+            self.perl
+                .ouroboros_stack_xpush_sv_mortal(&mut self.stack, sv.into_raw())
+        };
     }
 
     // XSUB
@@ -152,7 +162,10 @@ impl Context {
 
     /// Allocate new SV of type appropriate to store `T`
     #[inline]
-    pub fn new_sv<T>(&mut self, val: T) -> SV where T: IntoSV {
+    pub fn new_sv<T>(&mut self, val: T) -> SV
+    where
+        T: IntoSV,
+    {
         val.into_sv(self.perl)
     }
 
@@ -202,7 +215,10 @@ pub trait Stackable {
     fn push_to(self, ctx: &mut Context);
 }
 
-impl<T> Stackable for T where T: IntoSV {
+impl<T> Stackable for T
+where
+    T: IntoSV,
+{
     #[inline]
     fn push_to(self, ctx: &mut Context) {
         ctx.st_push(self);

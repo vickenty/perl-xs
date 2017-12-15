@@ -1,17 +1,17 @@
 use std;
-use std::{ ptr, mem, slice, string };
+use std::{mem, ptr, slice, string};
 use std::any::Any;
 use std::ops::Deref;
-use std::os::raw::{ c_char, c_int };
+use std::os::raw::{c_char, c_int};
 
 use raw;
-use raw::{ IV, UV, NV };
-use raw::{ SVt_PVAV, SVt_PVHV, SVt_PVCV, SVt_PVGV };
+use raw::{IV, NV, UV};
+use raw::{SVt_PVAV, SVt_PVCV, SVt_PVGV, SVt_PVHV};
 
+use array::AV;
+use convert::{FromSV, IntoSV, TryFromSV};
 use handle::Owned;
-use array::{ AV };
-use hash::{ HV };
-use convert::{ IntoSV, FromSV, TryFromSV };
+use hash::HV;
 
 /// Perl scalar object.
 pub struct SV(Owned<raw::SV>);
@@ -128,9 +128,7 @@ impl SV {
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
     #[inline]
     pub fn to_vec(&self) -> Vec<u8> {
-        unsafe {
-            self.as_slice().to_owned()
-        }
+        unsafe { self.as_slice().to_owned() }
     }
 
     /// Return a copy of string in the SV.
@@ -210,7 +208,11 @@ impl SV {
     pub fn bless(self, package: &str) -> SV {
         let pthx = self.pthx();
         unsafe {
-            let stash = pthx.gv_stashpvn(package.as_ptr() as *const _, package.len() as _, raw::GV_ADD as _);
+            let stash = pthx.gv_stashpvn(
+                package.as_ptr() as *const _,
+                package.len() as _,
+                raw::GV_ADD as _,
+            );
             pthx.sv_bless(self.as_ptr(), stash);
         }
         self
@@ -299,17 +301,19 @@ impl SV {
     }
 
     #[inline]
-    fn pthx(&self) -> raw::Interpreter { self.0.pthx() }
+    fn pthx(&self) -> raw::Interpreter {
+        self.0.pthx()
+    }
 
     #[inline]
-    fn as_ptr(&self) -> *mut raw::SV { self.0.as_ptr() }
+    fn as_ptr(&self) -> *mut raw::SV {
+        self.0.as_ptr()
+    }
 }
 
 impl Clone for SV {
     fn clone(&self) -> SV {
-        unsafe {
-            SV::from_raw_borrowed(self.pthx(), self.as_ptr())
-        }
+        unsafe { SV::from_raw_borrowed(self.pthx(), self.as_ptr()) }
     }
 }
 
@@ -378,7 +382,11 @@ impl IntoSV for bool {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {
-            let raw = if self { pthx.ouroboros_sv_yes() } else { pthx.ouroboros_sv_no() };
+            let raw = if self {
+                pthx.ouroboros_sv_yes()
+            } else {
+                pthx.ouroboros_sv_no()
+            };
             SV::from_raw_owned(pthx, raw)
         }
     }
@@ -402,9 +410,11 @@ impl<'a> IntoSV for &'a str {
     #[inline]
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         unsafe {
-            let svp = pthx.newSVpvn_flags(self.as_ptr() as *const i8,
-                                      self.len() as raw::STRLEN,
-                                      raw::SVf_UTF8 as raw::U32);
+            let svp = pthx.newSVpvn_flags(
+                self.as_ptr() as *const i8,
+                self.len() as raw::STRLEN,
+                raw::SVf_UTF8 as raw::U32,
+            );
             SV::from_raw_owned(pthx, svp)
         }
     }
@@ -481,9 +491,11 @@ impl DataRef<Any> {
     pub fn downcast<T: 'static>(self) -> Option<DataRef<T>> {
         let DataRef { inner, owner } = self;
         unsafe {
-            (*inner).downcast_ref::<T>().map(|r| DataRef {
-                inner: r,
-                owner: owner,
+            (*inner).downcast_ref::<T>().map(|r| {
+                DataRef {
+                    inner: r,
+                    owner: owner,
+                }
             })
         }
     }
@@ -511,6 +523,8 @@ impl<T: 'static> TryFromSV for DataRef<T> {
     type Error = &'static str;
 
     unsafe fn try_from_sv(pthx: raw::Interpreter, svp: *mut raw::SV) -> Result<Self, Self::Error> {
-        DataRef::<Any>::try_from_sv(pthx, svp)?.downcast().ok_or("invalid value")
+        DataRef::<Any>::try_from_sv(pthx, svp)?
+            .downcast()
+            .ok_or("invalid value")
     }
 }

@@ -3,7 +3,7 @@
 /// First form of this macro is used to define a Perl package inside a module. Each invocation
 /// should contain only one package and there should be only one such invocation per Rust module.
 ///
-/// ```
+/// ```ignore
 /// mod acme {
 ///     xs! {
 ///         package Acme;
@@ -15,7 +15,7 @@
 /// Second form is used to generate bootstrap function used by Perl to intialize XS module. Each
 /// crate should contain exactly one invocation in this form:
 ///
-/// ```
+/// ```ignore
 /// xs! {
 ///     bootstrap boot_Acme;
 ///     use acme;

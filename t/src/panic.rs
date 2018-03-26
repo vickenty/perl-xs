@@ -27,6 +27,9 @@ xs! {
     sub test_panic(_ctx) {
         let _cnt = Cnt::new();
         croak!("Panic!\n");
+
+        #[allow(unreachable_code)]
+        ()
     }
 
     sub test_croak(ctx) {

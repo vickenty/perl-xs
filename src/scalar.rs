@@ -103,16 +103,32 @@ impl SV {
     ///
     /// For example, this use is okay:
     ///
-    /// ```ignore
-    /// let chars = unsafe { sv.as_slice().chars().count() };
+    /// ```
+    /// # #[macro_use] extern crate perl_xs;
+    /// # #[macro_use] extern crate perl_sys;
+    /// # use perl_xs::SV;
+    /// # xs! {
+    /// #   package Dummy;
+    /// #   sub foo(ctx, sv: SV) {
+    ///         let bytes = unsafe { sv.as_slice().len() };
+    /// #   }
+    /// # }
     /// ```
     ///
     /// And this code may potentially access freed memory:
     ///
-    /// ```ignore
+    /// ```
+    /// # #[macro_use] extern crate perl_xs;
+    /// # #[macro_use] extern crate perl_sys;
+    /// # use perl_xs::SV;
+    /// # xs! {
+    /// #   package Dummy;
+    /// #   sub foo(ctx, sv1: SV, sv2: SV) {
     /// let msg = unsafe { sv1.as_slice() };
-    /// let pos = sv2.iv();
-    /// println!("{}", &msg[pos..]);
+    /// let pos = sv2.iv() as usize;
+    /// println!("{:?}", &msg[pos..]);
+    /// #   }
+    /// # }
     /// ```
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
@@ -484,10 +500,18 @@ impl IntoSV for Box<Any> {
 
 /// Reference to a Rust value stored inside the SV.
 ///
-/// ```ignore
-/// let value_sv: SV = ctx.new_sv_data(String::from("Hello world!"));
-/// let data_ref: DataRef<String> = value_sv.into_data_ref().unwrap();
+/// ```
+/// # #[macro_use] extern crate perl_xs;
+/// # #[macro_use] extern crate perl_sys;
+/// # use perl_xs::{SV, DataRef, convert::TryFromSV};
+/// # xs! {
+/// #   package Dummy;
+/// #   sub foo(ctx) {
+/// let value_sv: SV = ctx.new_sv_with_data(String::from("Hello world!"));
+/// let data_ref: DataRef<String> = value_sv.into_data_ref().and_then(DataRef::downcast).unwrap();
 /// assert_eq!(&**data_ref, "Hello world!");
+/// #   }
+/// # }
 /// ```
 ///
 /// Because Perl scalars are always shared, `DataRef` can provide only immutable references to the stored
@@ -495,10 +519,17 @@ impl IntoSV for Box<Any> {
 ///
 /// `DataRef` can be used as a type for a subroutine parameter:
 ///
-/// ```ignore
+/// ```
+/// # #[macro_use] extern crate perl_xs;
+/// # #[macro_use] extern crate perl_sys;
+/// # use std::cell::RefCell;
+/// # use perl_xs::{IV, DataRef};
+/// # xs! {
+/// #   package Dummy;
 /// sub increment(_ctx, value: DataRef<RefCell<IV>>, amount: IV) {
 ///     *value.borrow_mut() += amount;
 /// }
+/// # }
 /// ```
 ///
 /// If `increment` is then called with a scalar that does not contain a `RefCell<IV>` value,

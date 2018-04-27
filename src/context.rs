@@ -177,17 +177,21 @@ impl Context {
     /// Value can be accessed via `SV::into_data_ref()` method or automatic conversions to
     /// `DataRef<T>`.
     ///
-    /// ```ignore
+    /// ```
+    /// # #[macro_use] extern crate perl_xs;
+    /// # #[macro_use] extern crate perl_sys;
+    /// # use std::cell::RefCell;
+    /// # use perl_xs::{IV, DataRef};
     /// xs! {
     ///   package Counter;
     ///   sub new(ctx, class: String, initial: IV) {
     ///     ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
     ///   }
     ///   sub get(_ctx, this: DataRef<RefCell<IV>>) {
-    ///     *this.borrow()
+    ///     return *this.borrow();
     ///   }
     ///   sub inc(_ctx, this: DataRef<RefCell<IV>>, amount: Option<IV>) {
-    ///     *this.borrow_mut() += amount.unwrap_or(1)
+    ///     *this.borrow_mut() += amount.unwrap_or(1);
     ///   }
     /// }
     /// ```
@@ -204,11 +208,19 @@ impl Context {
 
 /// Push the value to the perl stack as one or more scalar values.
 ///
-/// ```ignore
+/// ```
+/// # #[macro_use] extern crate perl_xs;
+/// # #[macro_use] extern crate perl_sys;
+/// # use perl_xs::context::Stackable;
+/// # xs! {
+/// #   package Dummy;
+/// #   sub foo(ctx) {
 /// // pushes one scalar
 /// "question".push_to(ctx);
 /// // pushes two scalars
-/// (42, "answer").push_to(ctx);
+/// ("question", "answer").push_to(ctx);
+/// #   }
+/// # }
 /// ```
 pub trait Stackable {
     /// Push self onto Perl stack as zero or more individual scalar values.

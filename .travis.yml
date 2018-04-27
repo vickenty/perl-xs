@@ -20,5 +20,5 @@ before_install:
   - echo
 
 script:
-  - cd t/
-  - perl Makefile.PL && make test
+  - cargo t
+  - (cd t && perl Makefile.PL && make test)

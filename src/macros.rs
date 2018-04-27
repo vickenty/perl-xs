@@ -12,6 +12,7 @@
 ///         sub foo(ctx) { /* code */ }
 ///     }
 /// }
+/// # fn main() {}
 /// ```
 ///
 /// Second form is used to generate bootstrap function used by Perl to intialize XS module. Each
@@ -25,6 +26,7 @@
 ///     bootstrap boot_Acme;
 ///     use acme;
 /// }
+/// # fn main() {}
 /// ```
 ///
 /// Function name given to `bootstrap` keyword must start with `boot_` followed by the Perl module

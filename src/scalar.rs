@@ -113,6 +113,7 @@ impl SV {
     ///         let bytes = unsafe { sv.as_slice().len() };
     /// #   }
     /// # }
+    /// # fn main() {}
     /// ```
     ///
     /// And this code may potentially access freed memory:
@@ -129,6 +130,7 @@ impl SV {
     /// println!("{:?}", &msg[pos..]);
     /// #   }
     /// # }
+    /// # fn main() {}
     /// ```
     ///
     /// Perl macro: [`SvPV`](http://perldoc.perl.org/perlapi.html#SvPV).
@@ -512,6 +514,7 @@ impl IntoSV for Box<Any> {
 /// assert_eq!(&**data_ref, "Hello world!");
 /// #   }
 /// # }
+/// # fn main() {}
 /// ```
 ///
 /// Because Perl scalars are always shared, `DataRef` can provide only immutable references to the stored
@@ -530,6 +533,7 @@ impl IntoSV for Box<Any> {
 ///     *value.borrow_mut() += amount;
 /// }
 /// # }
+/// # fn main() {}
 /// ```
 ///
 /// If `increment` is then called with a scalar that does not contain a `RefCell<IV>` value,

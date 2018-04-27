@@ -194,6 +194,7 @@ impl Context {
     ///     *this.borrow_mut() += amount.unwrap_or(1);
     ///   }
     /// }
+    /// # fn main() {}
     /// ```
     #[inline]
     pub fn new_sv_with_data<T: 'static>(&mut self, value: T) -> SV {
@@ -221,6 +222,7 @@ impl Context {
 /// ("question", "answer").push_to(ctx);
 /// #   }
 /// # }
+/// # fn main() {}
 /// ```
 pub trait Stackable {
     /// Push self onto Perl stack as zero or more individual scalar values.

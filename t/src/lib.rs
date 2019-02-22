@@ -1,4 +1,6 @@
 #[macro_use]
+extern crate cstr;
+#[macro_use]
 extern crate perl_xs;
 #[macro_use]
 extern crate perl_sys;

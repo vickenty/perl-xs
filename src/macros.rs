@@ -108,11 +108,6 @@ macro_rules! xs {
     );
 }
 
-#[macro_export]
-macro_rules! cstr {
-    ($e:expr) => (&::std::ffi::CString::new($e).unwrap())
-}
-
 /// Throw a perl exception.
 ///
 /// Perl exceptions are implemented as panics in Rust, but do not call the panic hook - user

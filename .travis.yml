@@ -1,10 +1,8 @@
 sudo: false # run in a docker container
 language: perl
 perl:
+  - "5.30"
   - "5.28"
-  - "5.28-shrplib"
-  - "5.26"
-  - "5.26-shrplib"
 env:
   - TRAVIS_RUST_VERSION=stable
   - TRAVIS_RUST_VERSION=beta

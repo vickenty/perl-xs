@@ -1,5 +1,5 @@
 [package]
-name = "perlxs_derive_internals"
+name = "perl-xs-macro-support"
 version = "0.1.0"
 authors = ["perl-xs authors"]
 license = "MIT/Apache-2.0"

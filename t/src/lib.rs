@@ -4,8 +4,6 @@ extern crate cstr;
 extern crate perl_xs;
 #[macro_use]
 extern crate perl_sys;
-#[macro_use]
-extern crate perlxs_derive;
 
 mod stack;
 mod scalar;

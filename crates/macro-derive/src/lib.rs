@@ -1,11 +1,9 @@
-extern crate perl_xs;
 extern crate proc_macro;
 #[macro_use]
 extern crate quote;
 extern crate syn;
 
-extern crate perlxs_derive_internals;
-use perlxs_derive_internals as internals;
+use perl_xs_macro_support as support;
 
 use proc_macro::TokenStream;
 use syn::{Ident, Lit, StrStyle, VariantData};
@@ -26,11 +24,11 @@ fn impl_from_kv(ast: &syn::MacroInput) -> quote::Tokens {
     let ident_lit = Lit::Str(ast.ident.to_string(), StrStyle::Cooked);
     let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
-    let errors = internals::error::Errors::new();
+    let errors = support::error::Errors::new();
 
     let fields = match ast.body {
         syn::Body::Struct(ref vdata) => match vdata {
-            &VariantData::Struct(ref fields) => internals::ast::fields_from_ast(&errors, fields),
+            &VariantData::Struct(ref fields) => support::ast::fields_from_ast(&errors, fields),
             &VariantData::Tuple(_) | &VariantData::Unit => {
                 panic!("You can only derive this for normal structs!");
             }

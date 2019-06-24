@@ -1,6 +1,6 @@
 //! Smart wrappers for pointers managed by Perl.
 
-use raw::{Interpreter, AV, HV, SV};
+use crate::raw::{Interpreter, AV, HV, SV};
 use std::ops::Deref;
 
 /// Marker trait for types that are reference counted by Perl

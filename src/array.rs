@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use SV;
-use convert::{FromSV, TryFromSV};
-use handle::Owned;
-use raw;
-use raw::SSize_t;
+use crate::SV;
+use crate::convert::{FromSV, TryFromSV};
+use crate::handle::Owned;
+use crate::raw;
+use crate::raw::SSize_t;
 
 /// Perl array object.
 pub struct AV(Owned<raw::AV>);

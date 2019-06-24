@@ -2,7 +2,7 @@
 name = "perlxs_derive_internals"
 version = "0.1.0"
 authors = ["perl-xs authors"]
-license = "BSD-2-Clause"
+license = "MIT/Apache-2.0"
 edition = "2018"
 
 [dependencies]

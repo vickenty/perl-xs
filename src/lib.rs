@@ -24,6 +24,8 @@ pub mod error;
 #[doc(hidden)]
 pub mod croak;
 
+pub use perl_xs_macro_derive::FromPerlKV;
+
 pub use crate::array::AV;
 pub use crate::context::Context;
 pub use crate::convert::FromPerlKV;

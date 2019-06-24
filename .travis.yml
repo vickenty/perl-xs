@@ -3,6 +3,8 @@ language: perl
 perl:
   - "5.30"
   - "5.28"
+  - "5.26"
+  - "5.24"
 env:
   - TRAVIS_RUST_VERSION=stable
   - TRAVIS_RUST_VERSION=beta

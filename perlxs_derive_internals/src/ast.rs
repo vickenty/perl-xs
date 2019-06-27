@@ -1,5 +1,5 @@
-use error::Errors;
-use field::Field;
+use crate::error::Errors;
+use crate::field::Field;
 use syn;
 
 // fn struct_from_ast<'a>(cx: &Ctxt, data: &'a syn::VariantData, attrs: Option<&attr::Variant>) -> (Style, Vec<Field<'a>>) {

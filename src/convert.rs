@@ -1,9 +1,9 @@
 //! Traits for converting to and from Perl scalars.
 
-use SV;
-use context::Context;
-use error;
-use raw;
+use crate::SV;
+use crate::context::Context;
+use crate::error;
+use crate::raw;
 use std::fmt::Display;
 
 /// Fast unsafe conversion from raw SV pointer.

@@ -2,6 +2,7 @@
 name = "perlxs_derive"
 version = "0.1.0"
 authors = ["perl-xs Authors"]
+edition = "2018"
 
 [lib]
 name = "perlxs_derive"

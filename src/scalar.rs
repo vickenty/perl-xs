@@ -4,14 +4,14 @@ use std::any::Any;
 use std::ops::Deref;
 use std::os::raw::{c_char, c_int};
 
-use raw;
-use raw::{IV, NV, UV};
-use raw::{SVt_PVAV, SVt_PVCV, SVt_PVGV, SVt_PVHV};
+use crate::raw;
+use crate::raw::{IV, NV, UV};
+use crate::raw::{SVt_PVAV, SVt_PVCV, SVt_PVGV, SVt_PVHV};
 
-use array::AV;
-use convert::{FromSV, IntoSV, TryFromSV};
-use handle::Owned;
-use hash::HV;
+use crate::array::AV;
+use crate::convert::{FromSV, IntoSV, TryFromSV};
+use crate::handle::Owned;
+use crate::hash::HV;
 
 /// Perl scalar object.
 pub struct SV(Owned<raw::SV>);
@@ -393,7 +393,7 @@ impl TryFromSV for String {
         let mut len = 0;
         let ptr = pthx.ouroboros_sv_pv(raw, &mut len);
         let bytes = slice::from_raw_parts(ptr as *const u8, len as usize);
-        Ok(try!(std::str::from_utf8(bytes)).to_owned())
+        Ok(std::str::from_utf8(bytes)?.to_owned())
     }
 }
 
@@ -571,7 +571,7 @@ impl TryFromSV for DataRef<Any> {
 
     unsafe fn try_from_sv(pthx: raw::Interpreter, sv: *mut raw::SV) -> Result<Self, Self::Error> {
         let outer = SV::from_raw_borrowed(pthx, sv);
-        let inner = try!(outer.deref().ok_or("not a reference"));
+        let inner = outer.deref().ok_or("not a reference")?;
         inner.into_data_ref().ok_or("invalid value")
     }
 }

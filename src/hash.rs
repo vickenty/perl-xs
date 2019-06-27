@@ -1,7 +1,7 @@
-use SV;
-use convert::TryFromSV;
-use handle::Owned;
-use raw;
+use crate::SV;
+use crate::convert::TryFromSV;
+use crate::handle::Owned;
+use crate::raw;
 
 /// Perl hash object.
 pub struct HV(Owned<raw::HV>);

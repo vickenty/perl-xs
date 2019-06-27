@@ -3,7 +3,7 @@ use syn::{PathParameters, Ty};
 use syn::MetaItem::{List, NameValue};
 use syn::NestedMetaItem::{Literal, MetaItem};
 
-use error::Errors;
+use crate::error::Errors;
 
 #[derive(Debug)]
 pub struct Field {

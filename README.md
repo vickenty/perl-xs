@@ -49,7 +49,7 @@ under `t` directory.
 ## Prerequisites
 
 - Perl 5.20+ (for 64-bit array methods)
-- Rust 1.11+ (`catch_unwind`, `cdylib`)
+- Rust 1.31+
 
 ## Testing
 

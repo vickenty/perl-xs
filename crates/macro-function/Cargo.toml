@@ -1,0 +1,25 @@
+[package]
+name = "perl-xs-macro-function"
+version = "0.0.1"
+authors = ["The perl-xs Developers"]
+license = "MIT/Apache-2.0"
+edition = "2018"
+repository = "https://github.com/vickenty/perl-xs/tree/master/crates/macro-function"
+description = """
+Definition of the `#[perlxs]` attribute, an internal dependency
+"""
+
+[lib]
+proc-macro = true
+
+[dependencies]
+perl-xs-macro-support = { path = "../macro-support" }
+quote = "0.6"
+proc-macro2 = "0.4.30"
+
+[features]
+debug_print_generated_code = []
+
+[dev-dependencies]
+trybuild = "1.0"
+perl-xs = { path = "../.." }

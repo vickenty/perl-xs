@@ -48,11 +48,50 @@ where
     }
 }
 
-/// Construct new `Self` from `key value pairs of the XSUB context`.
-pub trait FromPerlKV {
-    /// create a struct from HV or key-value pairs on the stack, similar to a Moose constructor
-    /// offset is the starting positon in the stack we should consider
-    fn from_perl_kv(ctx: &mut Context, offset: isize) -> Result<Self, error::ToStructErr>
-    where
-        Self: Sized;
+
+/// Attempt to fetch a value from the stack.
+pub trait TryFromContext<'a>: Sized + 'a {
+    /// The type returned in the event of a conversion error.
+    type Error: Display;
+    /// Perform the conversion.
+    fn try_from_context<'b: 'a> (context: &'b mut Context, name: &str, index: &mut isize) -> Result<Self, Self::Error>;
+}
+
+impl <'a, T> TryFromContext<'a> for T where T: TryFromSV + 'a {
+    type Error = String;
+
+    fn try_from_context<'b: 'a>(ctx: &'b mut Context, name: &str, index: &mut isize) -> Result<T, Self::Error>{
+        let out = match ctx.st_try_fetch::<T>(*index){
+            Some(Ok(v))  => Ok(v),
+            Some(Err(e)) => Err(format!("Invalid argument '{}'", name)),
+            None         => Err(format!("Missing argument '{}'", name)),
+        };
+
+        *index += 1;
+        out
+    }
+}
+
+impl <'a, T> TryFromContext<'a> for Option<T> where T: TryFromSV + 'a {
+    type Error = String;
+
+    fn try_from_context<'b: 'a>(ctx: &'b mut Context, name: &str, index: &mut isize) -> Result<Option<T>,Self::Error>{
+        let out = match ctx.st_try_fetch::<T>(*index){
+            Some(Ok(v))  => Ok(Some(v)),
+            Some(Err(e)) => Err(format!("Invalid argument '{}'", name)),
+            None         => Ok(None),
+        };
+
+        *index += 1;
+        out
+    }
+}
+
+// For situations where you want to implement your own argument unpacking
+impl<'a> TryFromContext<'a> for &'a mut Context {
+    type Error = &'static str;
+
+    fn try_from_context<'b: 'a> (mut ctx: &'b mut Context, _name: &str, _index: &mut isize) -> Result<&'a mut Context,Self::Error>{
+        Ok(ctx)
+    }
 }

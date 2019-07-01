@@ -8,3 +8,9 @@ edition = "2018"
 [dependencies]
 perl-sys = { git="https://github.com/vickenty/perl-sys" }
 perl-xs-macro-derive = { path  = "crates/macro-derive" }
+perl-xs-macro-function = { path  = "crates/macro-function" }
+lazy_static = "1.3.0"
+ctor = "0.1.9"
+
+[features]
+debug_print_generated_code=[]

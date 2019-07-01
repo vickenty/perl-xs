@@ -1,6 +1,6 @@
 //! Context for XS subroutine calls.
 use crate::{AV, SV};
-use crate::convert::{FromSV, IntoSV, TryFromSV};
+use crate::convert::{FromSV, IntoSV, TryFromSV, TryFromContext};
 use crate::raw;
 use std;
 use std::ffi::CStr;
@@ -108,6 +108,15 @@ impl Context {
             self.st_fetch_raw(idx)
                 .map(|svp| T::try_from_sv(self.perl, svp))
         }
+    }
+
+    /// Fetch value from the Perl stack and try to convert to `T`.
+    #[inline]
+    pub fn st_try_unpack<'a,T>(&'a mut self, name: &str, idx: &mut isize) -> Result<T, T::Error>
+        where
+            T: TryFromContext<'a>,
+    {
+        TryFromContext::try_from_context(self, name, idx)
     }
 
     /// Push value onto Perl stack.

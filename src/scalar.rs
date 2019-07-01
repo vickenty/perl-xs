@@ -363,27 +363,27 @@ impl FromSV for SV {
     }
 }
 
-macro_rules! from_sv_for_option {
-    ($($fn:ident, $ty:ty;)*) => ($(
-        /// Return `Some(v)` if scalar value is defined, `None` otherwise.
-        impl FromSV for Option<$ty> {
-            #[inline]
-            unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Option<$ty> {
-                if pthx.ouroboros_sv_ok(raw) != 0 {
-                    Some(pthx.$fn(raw))
-                } else {
-                    None
-                }
-            }
-        }
-    )*)
-}
-
-from_sv_for_option! {
-    sv_iv, IV;
-    sv_uv, UV;
-    sv_nv, NV;
-}
+//macro_rules! from_sv_for_option {
+//    ($($fn:ident, $ty:ty;)*) => ($(
+//        /// Return `Some(v)` if scalar value is defined, `None` otherwise.
+//        impl FromSV for Option<$ty> {
+//            #[inline]
+//            unsafe fn from_sv(pthx: raw::Interpreter, raw: *mut raw::SV) -> Option<$ty> {
+//                if pthx.ouroboros_sv_ok(raw) != 0 {
+//                    Some(pthx.$fn(raw))
+//                } else {
+//                    None
+//                }
+//            }
+//        }
+//    )*)
+//}
+//
+//from_sv_for_option! {
+//    sv_iv, IV;
+//    sv_uv, UV;
+//    sv_nv, NV;
+//}
 
 impl TryFromSV for String {
     type Error = std::str::Utf8Error;

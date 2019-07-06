@@ -1,5 +1,9 @@
+use std::marker::PhantomData;
+use std::mem;
+use std::slice::from_raw_parts;
+
 use crate::SV;
-use crate::convert::TryFromSV;
+use crate::convert::{FromSV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
 
@@ -100,6 +104,12 @@ impl HV {
     pub unsafe fn from_raw_borrowed(pthx: raw::Interpreter, raw: *mut raw::HV) -> HV {
         HV(Owned::from_raw_borrowed(pthx, raw))
     }
+
+    /// Get an iterator over the hash.
+    #[inline]
+    pub fn iter<T: FromSV>(&self) -> Iter<T> {
+        Iter::new(self)
+    }
 }
 
 impl TryFromSV for HV {
@@ -114,5 +124,42 @@ impl TryFromSV for HV {
             pthx,
             pthx.ouroboros_sv_rv(raw) as *mut _,
         ))
+    }
+}
+
+pub struct Iter<'a, T> {
+    hv: &'a HV,
+    ty: PhantomData<T>,
+}
+
+impl<'a, T> Iter<'a, T> {
+    fn new(hv: &'a HV) -> Self {
+        unsafe { hv.pthx().hv_iterinit(hv.as_ptr()) };
+        Iter {
+            hv: hv,
+            ty: PhantomData,
+        }
+    }
+}
+
+impl<'a, T: FromSV> Iterator for Iter<'a, T> {
+    type Item = (&'a [u8], T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            let pthx = self.hv.pthx();
+            let hv_ptr = self.hv.as_ptr();
+
+            let he = pthx.hv_iternext(hv_ptr);
+            if he.is_null() {
+                None
+            } else {
+                let mut klen: raw::I32 = mem::uninitialized();
+                let k_ptr = pthx.hv_iterkey(he, &mut klen as *mut _) as *const u8;
+                let k = from_raw_parts(k_ptr, klen as usize);
+                let v = pthx.hv_iterval(hv_ptr, he);
+                Some((k, T::from_sv(pthx, v)))
+            }
+        }
     }
 }

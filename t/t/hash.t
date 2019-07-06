@@ -39,4 +39,9 @@ is XSTest::Hash::test_iter($hv), 4321, "hash iter";
 
 no_leaks_ok { XSTest::Hash::test_iter({ a => 1, b => 20, c => 200, d => 4000 }); };
 
+$hv = { a => 1, b => 20, c => 300, d => 4000 };
+is XSTest::Hash::test_values($hv), 4321, "hash values";
+
+no_leaks_ok { XSTest::Hash::test_values({ a => 1, b => 20, c => 200, d => 4000 }); };
+
 done_testing;

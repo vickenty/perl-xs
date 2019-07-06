@@ -110,6 +110,12 @@ impl HV {
     pub fn iter<T: FromSV>(&self) -> Iter<T> {
         Iter::new(self)
     }
+
+    /// Get an iterator over the hash values.
+    #[inline]
+    pub fn values<T: FromSV>(&self) -> Values<T> {
+        Values::new(self)
+    }
 }
 
 impl TryFromSV for HV {
@@ -159,6 +165,40 @@ impl<'a, T: FromSV> Iterator for Iter<'a, T> {
                 let k = from_raw_parts(k_ptr, klen as usize);
                 let v = pthx.hv_iterval(hv_ptr, he);
                 Some((k, T::from_sv(pthx, v)))
+            }
+        }
+    }
+}
+
+pub struct Values<'a, T> {
+    hv: &'a HV,
+    ty: PhantomData<T>,
+}
+
+impl<'a, T> Values<'a, T> {
+    fn new(hv: &'a HV) -> Self {
+        unsafe { hv.pthx().hv_iterinit(hv.as_ptr()) };
+        Values {
+            hv: hv,
+            ty: PhantomData,
+        }
+    }
+}
+
+impl<'a, T: FromSV> Iterator for Values<'a, T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            let pthx = self.hv.pthx();
+            let hv_ptr = self.hv.as_ptr();
+
+            let he = pthx.hv_iternext(hv_ptr);
+            if he.is_null() {
+                None
+            } else {
+                let v = pthx.hv_iterval(hv_ptr, he);
+                Some(T::from_sv(pthx, v))
             }
         }
     }

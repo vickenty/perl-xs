@@ -27,4 +27,9 @@ xs! {
         let n: IV = hv.iter().map(|(_, v): (&[u8], IV)| v).sum();
         n
     }
+
+    sub test_values(ctx, hv: HV) {
+        let n: IV = hv.values::<IV>().sum();
+        n
+    }
 }

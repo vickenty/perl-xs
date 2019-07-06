@@ -49,4 +49,9 @@ is XSTest::Hash::test_keys($hv), 4321, "hash keys";
 
 no_leaks_ok { XSTest::Hash::test_keys({ a => 1, b => 20, c => 200, d => 4000 }); };
 
+$hv = { a => 1, b => 20, c => 300, d => 4000 };
+is XSTest::Hash::test_for($hv), 4321, "hash in for loop";
+
+no_leaks_ok { XSTest::Hash::test_for({ a => 1, b => 20, c => 200, d => 4000 }); };
+
 done_testing;

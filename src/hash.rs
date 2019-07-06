@@ -239,3 +239,13 @@ impl<'a> Iterator for Keys<'a> {
         }
     }
 }
+
+impl<'a> IntoIterator for &'a HV {
+    type Item = (&'a [u8], SV);
+    type IntoIter = Iter<'a, SV>;
+
+    #[inline]
+    fn into_iter(self) -> Self::IntoIter {
+        self.iter()
+    }
+}

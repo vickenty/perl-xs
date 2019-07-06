@@ -39,4 +39,12 @@ xs! {
         }).sum();
         n
     }
+
+    sub test_for(ctx, hv: HV) {
+        let mut n: IV = 0;
+        for (_, v) in &hv {
+            n += v.iv();
+        }
+        n
+    }
 }

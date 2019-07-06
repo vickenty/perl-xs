@@ -162,14 +162,17 @@ impl<'a, T: FromSV> Iterator for Iter<'a, T> {
             let pthx = self.hv.pthx();
             let hv_ptr = self.hv.as_ptr();
 
-            let he = pthx.hv_iternext(hv_ptr);
-            if he.is_null() {
+            let mut k_ptr: *mut i8 = mem::uninitialized();
+            let mut klen: raw::I32 = mem::uninitialized();
+            let v = pthx.hv_iternextsv(
+                hv_ptr,
+                &mut k_ptr as *mut _,
+                &mut klen as *mut _,
+            );
+            if v.is_null() {
                 None
             } else {
-                let mut klen: raw::I32 = mem::uninitialized();
-                let k_ptr = pthx.hv_iterkey(he, &mut klen as *mut _) as *const u8;
-                let k = from_raw_parts(k_ptr, klen as usize);
-                let v = pthx.hv_iterval(hv_ptr, he);
+                let k = from_raw_parts(k_ptr as *const u8, klen as usize);
                 Some((k, T::from_sv(pthx, v)))
             }
         }

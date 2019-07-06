@@ -1,4 +1,4 @@
-use perl_xs::{ SV, HV };
+use perl_xs::{ SV, HV, IV };
 
 xs! {
     package XSTest::Hash;
@@ -21,5 +21,30 @@ xs! {
 
     sub test_delete(ctx, hv: HV, sv: SV) {
         hv.delete::<SV>(&sv.to_string().unwrap())
+    }
+
+    sub test_iter(ctx, hv: HV) {
+        let n: IV = hv.iter().map(|(_, v): (&[u8], IV)| v).sum();
+        n
+    }
+
+    sub test_values(ctx, hv: HV) {
+        let n: IV = hv.values::<IV>().sum();
+        n
+    }
+
+    sub test_keys(ctx, hv: HV) {
+        let n: IV = hv.keys().map(|k| {
+            hv.fetch::<IV>(std::str::from_utf8(k).unwrap()).unwrap()
+        }).sum();
+        n
+    }
+
+    sub test_for(ctx, hv: HV) {
+        let mut n: IV = 0;
+        for (_, v) in &hv {
+            n += v.iv();
+        }
+        n
     }
 }

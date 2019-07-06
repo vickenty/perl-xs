@@ -32,4 +32,11 @@ xs! {
         let n: IV = hv.values::<IV>().sum();
         n
     }
+
+    sub test_keys(ctx, hv: HV) {
+        let n: IV = hv.keys().map(|k| {
+            hv.fetch::<IV>(std::str::from_utf8(k).unwrap()).unwrap()
+        }).sum();
+        n
+    }
 }

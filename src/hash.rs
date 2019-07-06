@@ -116,6 +116,12 @@ impl HV {
     pub fn values<T: FromSV>(&self) -> Values<T> {
         Values::new(self)
     }
+
+    /// Get an iterator over the hash keys.
+    #[inline]
+    pub fn keys(&self) -> Keys {
+        Keys::new(self)
+    }
 }
 
 impl TryFromSV for HV {
@@ -199,6 +205,36 @@ impl<'a, T: FromSV> Iterator for Values<'a, T> {
             } else {
                 let v = pthx.hv_iterval(hv_ptr, he);
                 Some(T::from_sv(pthx, v))
+            }
+        }
+    }
+}
+
+pub struct Keys<'a>(&'a HV);
+
+impl<'a> Keys<'a> {
+    fn new(hv: &'a HV) -> Self {
+        unsafe { hv.pthx().hv_iterinit(hv.as_ptr()) };
+        Keys(hv)
+    }
+}
+
+impl<'a> Iterator for Keys<'a> {
+    type Item = &'a [u8];
+
+    fn next(&mut self) -> Option<Self::Item> {
+        unsafe {
+            let pthx = self.0.pthx();
+            let hv_ptr = self.0.as_ptr();
+
+            let he = pthx.hv_iternext(hv_ptr);
+            if he.is_null() {
+                None
+            } else {
+                let mut klen: raw::I32 = mem::uninitialized();
+                let k_ptr = pthx.hv_iterkey(he, &mut klen as *mut _) as *const u8;
+                let k = from_raw_parts(k_ptr, klen as usize);
+                Some(k)
             }
         }
     }

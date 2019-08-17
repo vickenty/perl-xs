@@ -52,26 +52,14 @@ impl fmt::Display for ToStructErr {
                     if names.len() == 1 {
                         writeln!(f, "\tMissing field: {}", names[0])?;
                     } else {
-                        writeln!(
-                            f,
-                            "\tMissing one of the following fields: {}",
-                            names.join(", ")
-                        )?;
+                        writeln!(f, "\tMissing one of the following fields: {}", names.join(", "))?;
                     };
                 }
                 OmittedValue(ref name) => {
                     writeln!(f, "\tValue is required for: {}", name)?;
                 }
-                KeyParseFail {
-                    offset,
-                    ref ty,
-                    ref error,
-                } => {
-                    writeln!(
-                        f,
-                        "\tFailed to parse key at offset {} as {}: {}",
-                        offset, ty, error
-                    )?;
+                KeyParseFail { offset, ref ty, ref error } => {
+                    writeln!(f, "\tFailed to parse key at offset {} as {}: {}", offset, ty, error)?;
                 }
                 ValueParseFail {
                     ref key,

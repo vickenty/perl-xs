@@ -1,4 +1,4 @@
-use perl_xs::{ IV, UV, NV };
+use perl_xs::{IV, NV, UV};
 
 xs! {
     package XSTest;

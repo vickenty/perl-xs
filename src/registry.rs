@@ -1,10 +1,9 @@
-
 use core::ptr;
 use core::sync::atomic::{AtomicPtr, Ordering};
 
 // Not public API. Used by generated code.
 #[doc(hidden)]
-pub struct Registry<T: 'static>  {
+pub struct Registry<T: 'static> {
     head: AtomicPtr<Node<T>>,
 }
 
@@ -14,7 +13,7 @@ struct Node<T: 'static> {
 }
 
 #[doc(hidden)]
-impl <T: 'static> Registry<T> {
+impl<T: 'static> Registry<T> {
     // Not public API. Used by generated code.
     pub const fn new() -> Self {
         Registry {
@@ -36,7 +35,7 @@ impl <T: 'static> Registry<T> {
             }
         }
     }
-    pub fn iter (&self) -> Iter<T> {
+    pub fn iter(&self) -> Iter<T> {
         let head = self.head.load(Ordering::SeqCst);
         Iter::<T> {
             // Head pointer is always null or valid &'static Node.
@@ -49,7 +48,7 @@ pub struct Iter<T: 'static> {
     node: Option<&'static Node<T>>,
 }
 
-impl <T: 'static> Iterator for Iter<T> {
+impl<T: 'static> Iterator for Iter<T> {
     type Item = &'static T;
 
     fn next(&mut self) -> Option<Self::Item> {

@@ -1,5 +1,5 @@
-use perl_xs::IV;
 use perl_xs::G_DISCARD;
+use perl_xs::IV;
 
 static mut COUNTER: IV = 0;
 

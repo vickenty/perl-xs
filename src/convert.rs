@@ -1,9 +1,8 @@
 //! Traits for converting to and from Perl scalars.
 
-use crate::SV;
 use crate::context::Context;
-use crate::error;
 use crate::raw;
+use crate::SV;
 use std::fmt::Display;
 
 /// Fast unsafe conversion from raw SV pointer.
@@ -48,23 +47,25 @@ where
     }
 }
 
-
 /// Attempt to fetch a value from the stack.
 pub trait TryFromContext<'a>: Sized + 'a {
     /// The type returned in the event of a conversion error.
     type Error: Display;
     /// Perform the conversion.
-    fn try_from_context<'b: 'a> (context: &'b mut Context, name: &str, index: &mut isize) -> Result<Self, Self::Error>;
+    fn try_from_context<'b: 'a>(context: &'b mut Context, name: &str, index: &mut isize) -> Result<Self, Self::Error>;
 }
 
-impl <'a, T> TryFromContext<'a> for T where T: TryFromSV + 'a {
+impl<'a, T> TryFromContext<'a> for T
+where
+    T: TryFromSV + 'a,
+{
     type Error = String;
 
-    fn try_from_context<'b: 'a>(ctx: &'b mut Context, name: &str, index: &mut isize) -> Result<T, Self::Error>{
-        let out = match ctx.st_try_fetch::<T>(*index){
-            Some(Ok(v))  => Ok(v),
-            Some(Err(e)) => Err(format!("Invalid argument '{}'", name)),
-            None         => Err(format!("Missing argument '{}'", name)),
+    fn try_from_context<'b: 'a>(ctx: &'b mut Context, name: &str, index: &mut isize) -> Result<T, Self::Error> {
+        let out = match ctx.st_try_fetch::<T>(*index) {
+            Some(Ok(v)) => Ok(v),
+            Some(Err(e)) => Err(format!("Invalid argument '{}' ({})", name, e)),
+            None => Err(format!("Missing argument '{}'", name)),
         };
 
         *index += 1;
@@ -72,14 +73,17 @@ impl <'a, T> TryFromContext<'a> for T where T: TryFromSV + 'a {
     }
 }
 
-impl <'a, T> TryFromContext<'a> for Option<T> where T: TryFromSV + 'a {
+impl<'a, T> TryFromContext<'a> for Option<T>
+where
+    T: TryFromSV + 'a,
+{
     type Error = String;
 
-    fn try_from_context<'b: 'a>(ctx: &'b mut Context, name: &str, index: &mut isize) -> Result<Option<T>,Self::Error>{
-        let out = match ctx.st_try_fetch::<T>(*index){
-            Some(Ok(v))  => Ok(Some(v)),
-            Some(Err(e)) => Err(format!("Invalid argument '{}'", name)),
-            None         => Ok(None),
+    fn try_from_context<'b: 'a>(ctx: &'b mut Context, name: &str, index: &mut isize) -> Result<Option<T>, Self::Error> {
+        let out = match ctx.st_try_fetch::<T>(*index) {
+            Some(Ok(v)) => Ok(Some(v)),
+            Some(Err(e)) => Err(format!("Invalid argument '{}' ({})", name, e)),
+            None => Ok(None),
         };
 
         *index += 1;
@@ -91,7 +95,7 @@ impl <'a, T> TryFromContext<'a> for Option<T> where T: TryFromSV + 'a {
 impl<'a> TryFromContext<'a> for &'a mut Context {
     type Error = &'static str;
 
-    fn try_from_context<'b: 'a> (mut ctx: &'b mut Context, _name: &str, _index: &mut isize) -> Result<&'a mut Context,Self::Error>{
+    fn try_from_context<'b: 'a>(ctx: &'b mut Context, _name: &str, _index: &mut isize) -> Result<&'a mut Context, Self::Error> {
         Ok(ctx)
     }
 }

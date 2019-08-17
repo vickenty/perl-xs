@@ -16,6 +16,7 @@ proc-macro = true
 perl-xs-macro-support = { path = "../macro-support" }
 quote = "0.6"
 proc-macro2 = "0.4.30"
+syn = { version = "0.15.39", features = ["full", "extra-traits"] }
 
 [features]
 debug_print_generated_code = []

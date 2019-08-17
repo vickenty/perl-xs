@@ -1,5 +1,5 @@
+use perl_xs::{DataRef, IV};
 use std::cell::RefCell;
-use perl_xs::{ IV, DataRef };
 
 xs! {
     package XSTest::Data;

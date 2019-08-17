@@ -24,7 +24,7 @@ where
     }
 }
 
-unsafe fn rethrow_panic(perl: Interpreter, e: Box<any::Any>) -> ! {
+unsafe fn rethrow_panic(perl: Interpreter, e: Box<dyn any::Any>) -> ! {
     let e = perl_sys::try_rethrow(perl, e);
 
     let mut errsv: *mut SV = ptr::null_mut();
@@ -52,9 +52,5 @@ where
     T: AsRef<str>,
 {
     let s = e.as_ref();
-    perl.newSVpvn_flags(
-        s.as_ptr() as *const _,
-        s.len() as STRLEN,
-        SVs_TEMP | SVf_UTF8,
-    )
+    perl.newSVpvn_flags(s.as_ptr() as *const _, s.len() as STRLEN, SVs_TEMP | SVf_UTF8)
 }

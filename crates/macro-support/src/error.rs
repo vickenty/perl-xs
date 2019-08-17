@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 use std::fmt::Display;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Errors {
     errors: RefCell<Option<Vec<String>>>,
 }

@@ -6,6 +6,7 @@ use crate::SV;
 use crate::convert::{FromSV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
+use crate::SV;
 
 /// Perl hash object.
 pub struct HV(Owned<raw::HV>);
@@ -78,13 +79,9 @@ impl HV {
     pub fn store(&self, key: &str, val: SV) {
         unsafe {
             let raw = val.into_raw();
-            let svpp = self.pthx().hv_store(
-                self.as_ptr(),
-                key.as_ptr() as *const _,
-                -(key.len() as raw::I32),
-                raw,
-                0,
-            );
+            let svpp = self
+                .pthx()
+                .hv_store(self.as_ptr(), key.as_ptr() as *const _, -(key.len() as raw::I32), raw, 0);
             if svpp.is_null() {
                 self.pthx().ouroboros_sv_refcnt_dec(raw)
             }
@@ -132,10 +129,7 @@ impl TryFromSV for HV {
             return Err("not a hash reference");
         }
 
-        Ok(HV::from_raw_borrowed(
-            pthx,
-            pthx.ouroboros_sv_rv(raw) as *mut _,
-        ))
+        Ok(HV::from_raw_borrowed(pthx, pthx.ouroboros_sv_rv(raw) as *mut _))
     }
 }
 

@@ -4,19 +4,14 @@ use crate::error::Errors;
 use quote::quote;
 
 /// Takes the parsed input from a `#[perlxs]` macro and returns the generated bindings
-pub fn expand(attr: TokenStream, input: TokenStream) -> Result<TokenStream, Errors> {
+pub fn expand(_attr: TokenStream, input: TokenStream) -> Result<TokenStream, Errors> {
 
     let item = syn::parse2::<syn::Item>(input.clone())?;
 
-    match item {
-        syn::Item::Fn(f) => {
-           expand_function(f)
-        },
+    let f = match item {
+        syn::Item::Fn(f) => f,
         _ => panic!("cannot expand macro for non-function")
-    }
-}
-
-fn expand_function (f: syn::ItemFn ) -> Result<TokenStream,Errors>{
+    };
 
     let rust_fn_ident = f.ident.clone();
     let rust_fn_name = format!("{}",f.ident);
@@ -27,7 +22,7 @@ fn expand_function (f: syn::ItemFn ) -> Result<TokenStream,Errors>{
 
     let xs_name = syn::Ident::new(&format!("_xs_{}",rust_fn_name),f.ident.span());
 
-    let (impl_generics, ty_generics, where_clause) = f.decl.generics.split_for_impl();
+//    let (_impl_generics, _ty_generics, _where_clause) = f.decl.generics.split_for_impl();
 
     let errors = crate::error::Errors::new();
 
@@ -35,7 +30,7 @@ fn expand_function (f: syn::ItemFn ) -> Result<TokenStream,Errors>{
     let mut rust_args = Vec::new();
 
     for arg in f.decl.inputs.iter(){
-        println!("{:?}", arg);
+//        println!("{:?}", arg);
         match arg {
             syn::FnArg::SelfRef(_) => {
                 //TODO: determine how to implement a proxy struct for perl objects
@@ -105,9 +100,9 @@ fn expand_function (f: syn::ItemFn ) -> Result<TokenStream,Errors>{
             // Run at library load time
             #[ctor]
             fn bootstrap() {
-                let path = module_path!();
-                println!("MODULE PATH {}", path);
-                ::perl_xs::SYMBOL_REGISTRY.submit(Symbol{ name: #rust_fn_name, ptr: #xs_name});
+                let module = module_path!();
+//                println!("MODULE PATH {}", module);
+                ::perl_xs::SYMBOL_REGISTRY.submit(Symbol{ module, name: #rust_fn_name, package: None, ptr: #xs_name});
             }
         };
     };

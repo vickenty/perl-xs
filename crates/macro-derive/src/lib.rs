@@ -24,7 +24,7 @@ fn impl_from_kv(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let ident = &ast.ident;
     let ident_lit = proc_macro2::Literal::string(&ast.ident.to_string());
 
-    let (impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
+    let (_impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
     let errors = support::error::Errors::new();
 
@@ -102,7 +102,7 @@ fn impl_from_kv(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let from_kv_stack = quote!{
 
         while let Some(sv_res) = ctx.st_try_fetch::<String>(*offset) {
-            println!("Offset {} = [{:?}]", offset, sv_res);
+//            println!("Offset {} = [{:?}]", offset, sv_res);
             match sv_res {
                 Ok(key) => {
                     match &*key {

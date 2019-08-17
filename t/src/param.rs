@@ -1,4 +1,4 @@
-use perl_xs::{ IV, AV };
+use perl_xs::{AV, IV};
 
 xs! {
     package XSTest::Param;

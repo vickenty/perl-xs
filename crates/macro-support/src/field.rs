@@ -1,4 +1,3 @@
-use proc_macro2::{Ident, Span};
 
 use crate::error::Errors;
 
@@ -25,7 +24,7 @@ impl Field {
             for meta_item in meta_items {
                 match meta_item {
                     // Parse `#[perlxs(key = "-foo")]`
-                    syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue{ref ident, ref lit, ref eq_token})) if ident == "key" => {
+                    syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue{ref ident, ref lit, ..})) if ident == "key" => {
                         if let Ok(s) = get_string_from_lit(errors, &ident.to_string(), &ident.to_string(), lit) {
                             keys.push(s);
                         }

@@ -1,7 +1,7 @@
 //! Context for XS subroutine calls.
-use crate::{AV, SV};
-use crate::convert::{FromSV, IntoSV, TryFromSV, TryFromContext};
+use crate::convert::{FromSV, IntoSV, TryFromContext, TryFromSV};
 use crate::raw;
+use crate::{AV, SV};
 use std;
 use std::ffi::CStr;
 
@@ -12,7 +12,6 @@ pub struct Context {
 }
 
 const EMPTY: &'static [i8] = &[0];
-
 
 impl Context {
     /// Invoke closure with the context of Perl subroutine call.
@@ -42,7 +41,7 @@ impl Context {
             raw::catch_unwind(perl, || {
                 let mut ctx = Context {
                     perl: perl,
-                    stack: std::mem::uninitialized(),
+                    stack: std::mem::MaybeUninit::uninit().assume_init(),
                 };
 
                 perl.ouroboros_stack_init(&mut ctx.stack);
@@ -78,8 +77,7 @@ impl Context {
         if idx >= self.st_items() {
             return None;
         }
-        let svp = self.perl
-            .ouroboros_stack_fetch(&mut self.stack, idx as raw::SSize_t);
+        let svp = self.perl.ouroboros_stack_fetch(&mut self.stack, idx as raw::SSize_t);
         if svp.is_null() {
             return None;
         }
@@ -104,17 +102,14 @@ impl Context {
     where
         T: TryFromSV,
     {
-        unsafe {
-            self.st_fetch_raw(idx)
-                .map(|svp| T::try_from_sv(self.perl, svp))
-        }
+        unsafe { self.st_fetch_raw(idx).map(|svp| T::try_from_sv(self.perl, svp)) }
     }
 
     /// Fetch value from the Perl stack and try to convert to `T`.
     #[inline]
-    pub fn st_try_unpack<'a,T>(&'a mut self, name: &str, idx: &mut isize) -> Result<T, T::Error>
-        where
-            T: TryFromContext<'a>,
+    pub fn st_try_unpack<'a, T>(&'a mut self, name: &str, idx: &mut isize) -> Result<T, T::Error>
+    where
+        T: TryFromContext<'a>,
     {
         TryFromContext::try_from_context(self, name, idx)
     }
@@ -128,10 +123,7 @@ impl Context {
         T: IntoSV,
     {
         let sv = val.into_sv(self.perl);
-        unsafe {
-            self.perl
-                .ouroboros_stack_xpush_sv_mortal(&mut self.stack, sv.into_raw())
-        };
+        unsafe { self.perl.ouroboros_stack_xpush_sv_mortal(&mut self.stack, sv.into_raw()) };
     }
 
     // XSUB
@@ -207,7 +199,7 @@ impl Context {
     /// ```
     #[inline]
     pub fn new_sv_with_data<T: 'static>(&mut self, value: T) -> SV {
-        self.new_sv(Box::new(value) as Box<std::any::Any>)
+        self.new_sv(Box::new(value) as Box<dyn std::any::Any>)
     }
 
     /// Return an undefined SV.

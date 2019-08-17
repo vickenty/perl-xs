@@ -1,4 +1,8 @@
-macro_rules! expr { ( $e:expr ) => ( $e ) }
+macro_rules! expr {
+    ( $e:expr ) => {
+        $e
+    };
+}
 
 macro_rules! method {
     ($( #[$me:meta] )* simple fn $name:ident ( $( $pname:ident : $ptype:ty ),* ) = $imp:ident ( $( $args:expr ),* ) $( $rest:tt )* ) => (

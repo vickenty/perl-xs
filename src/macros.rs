@@ -74,14 +74,22 @@ macro_rules! xs {
             }
         )*
 
-        pub const PERL_XS: &'static [ (&'static str, $crate::raw::XSUBADDR_t) ] = &[
-            $(
-                (
-                    concat!(stringify!($pkg), "::", stringify!($name)),
-                    $name as $crate::raw::XSUBADDR_t,
-                )
-            ),*
-        ];
+        const _XS_PACKAGE_DEF_DEPRECATED: () = {
+            #[ctor]
+            fn boot() {
+                $(
+                    (
+                     ::perl_xs::SYMBOL_REGISTRY.submit(::perl_xs::Symbol{
+                        module: module_path!(),
+                        name: stringify!($name),
+                        package: Some(stringify!($pkg)),
+                        ptr: $name as $crate::raw::XSUBADDR_t
+                        })
+                    )
+                );*
+            }
+
+        };
     );
 
     (
@@ -94,12 +102,7 @@ macro_rules! xs {
             fn $boot (pthx, _cv: *mut $crate::raw::CV) {
                 let perl = $crate::raw::initialize(pthx);
                 $crate::context::Context::wrap(perl, |ctx| {
-                    $(
-                        for &(subname, subptr) in $( $name )::*::PERL_XS {
-                            let cname = ::std::ffi::CString::new(subname).unwrap();
-                            ctx.new_xs(&cname, subptr);
-                        }
-                    )*
+                    ::perl_xs::boot::boot(ctx, stringify!($boot).splitn(2, "_").nth(1).expect("bootstrap directive must be in the format of boot_PackageName"));
 
                     1 as $crate::raw::IV
                 });

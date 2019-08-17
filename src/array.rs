@@ -1,10 +1,10 @@
 use std::marker::PhantomData;
 
-use crate::SV;
 use crate::convert::{FromSV, TryFromSV};
 use crate::handle::Owned;
 use crate::raw;
 use crate::raw::SSize_t;
+use crate::SV;
 
 /// Perl array object.
 pub struct AV(Owned<raw::AV>);
@@ -145,10 +145,7 @@ impl TryFromSV for AV {
             return Err("not an array reference");
         }
 
-        Ok(AV::from_raw_borrowed(
-            pthx,
-            pthx.ouroboros_sv_rv(raw) as *mut _,
-        ))
+        Ok(AV::from_raw_borrowed(pthx, pthx.ouroboros_sv_rv(raw) as *mut _))
     }
 }
 

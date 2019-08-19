@@ -22,11 +22,15 @@ pub fn fields_from_ast<'a>(errors: &Errors, fields: Vec<syn::Field>) -> Vec<Fiel
 }
 
 pub fn de_optionalize(ty: &syn::Type) -> (bool, syn::Type) {
-    if let &syn::Type::Path(syn::TypePath{path: syn::Path { ref segments, .. }, ..}) = ty {
+    if let &syn::Type::Path(syn::TypePath {
+        path: syn::Path { ref segments, .. },
+        ..
+    }) = ty
+    {
         if segments.len() == 1 && segments[0].ident == "Option" {
             if let syn::PathArguments::AngleBracketed(ref abpd) = segments[0].arguments {
                 if abpd.args.len() == 1 {
-                    if let syn::GenericArgument::Type( path @ syn::Type::Path(_)) = &abpd.args[0] {
+                    if let syn::GenericArgument::Type(path @ syn::Type::Path(_)) = &abpd.args[0] {
                         return (true, path.clone());
                     }
                 }
@@ -35,8 +39,6 @@ pub fn de_optionalize(ty: &syn::Type) -> (bool, syn::Type) {
     }
     (false, ty.clone())
 }
-
-
 
 //pub fn function_from_ast<'a>(errors: &Errors, item: syn:Item::Fn) {
 //    match item {
@@ -83,4 +85,3 @@ pub fn de_optionalize(ty: &syn::Type) -> (bool, syn::Type) {
 //        }
 //    }
 //}
-

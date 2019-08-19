@@ -1,10 +1,10 @@
 [package]
-name = "perl-xs-macro-function"
+name = "perl-xs-macro"
 version = "0.0.1"
 authors = ["The perl-xs Developers"]
 license = "MIT/Apache-2.0"
 edition = "2018"
-repository = "https://github.com/vickenty/perl-xs/tree/master/crates/macro-function"
+repository = "https://github.com/vickenty/perl-xs/tree/master/crates/macro"
 description = """
 Definition of the `#[perlxs]` attribute, an internal dependency
 """

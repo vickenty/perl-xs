@@ -1,37 +1,23 @@
-#![recursion_limit="128"]
-extern crate proc_macro;
+use crate::error::Errors;
+use proc_macro2::{Span, TokenStream};
+use quote::quote;
 
-#[macro_use]
-extern crate quote;
-extern crate syn;
+// Takes the parsed input from a `#[perlxs]` macro and returns the generated bindings
+pub fn expand(input: TokenStream) -> Result<TokenStream, Errors> {
+    let ast = syn::parse2::<syn::DeriveInput>(input.clone())?;
 
-use perl_xs_macro_support as support;
-
-use syn::{Ident, DeriveInput, parse_macro_input};
-
-#[proc_macro_derive(DeriveTryFromContext, attributes(perlxs))]
-pub fn from_kv(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let ast = parse_macro_input!(input as DeriveInput);
-
-    // Build the impl
-    let output = impl_from_kv(&ast);
-
-    // Return the generated impl and convert from proc_macro2::TokenStream
-    output.into()
-}
-
-fn impl_from_kv(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     let ident = &ast.ident;
     let ident_lit = proc_macro2::Literal::string(&ast.ident.to_string());
 
     let (_impl_generics, ty_generics, where_clause) = ast.generics.split_for_impl();
 
-    let errors = support::error::Errors::new();
+    let errors = Errors::new();
 
     let fields = match ast.data {
-        syn::Data::Struct(syn::DataStruct{  fields: syn::Fields::Named(syn::FieldsNamed{ ref named, .. }), .. }) => {
-            support::ast::fields_from_ast(&errors, named.iter().map(|n| n.to_owned() ).collect())
-        },
+        syn::Data::Struct(syn::DataStruct {
+            fields: syn::Fields::Named(syn::FieldsNamed { ref named, .. }),
+            ..
+        }) => crate::ast::fields_from_ast(&errors, named.iter().map(|n| n.to_owned()).collect()),
         _ => {
             panic!("You can only derive this for normal structs!");
         }
@@ -47,15 +33,11 @@ fn impl_from_kv(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
     for field in fields.iter() {
         let ident = &field.ident;
         let ty = &field.ty;
-        let var = Ident::new(&format!("value_{}", ident), proc_macro2::Span::call_site());
-        let ty_lit = proc_macro2::Literal::string(&quote!{#ty}.to_string());
+        let var = syn::Ident::new(&format!("value_{}", ident), proc_macro2::Span::call_site());
+        let ty_lit = proc_macro2::Literal::string(&quote! {#ty}.to_string());
 
         #[allow(unused_variables)]
-        let keys_lit: Vec<_> = field
-            .keys
-            .iter()
-            .map(|k| proc_macro2::Literal::string(&k.to_string()))
-            .collect();
+        let keys_lit: Vec<_> = field.keys.iter().map(|k| proc_macro2::Literal::string(&k.to_string())).collect();
 
         letvars.push(quote! {
             let mut #var : Option<#ty> = None
@@ -87,7 +69,7 @@ fn impl_from_kv(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
                 #ident: #var
             });
         } else {
-            paramtests.push(quote!{
+            paramtests.push(quote! {
                 if #var.is_none() {
                     errors.push(_perlxs::error::ToStructErrPart::OmittedKey(&[#(#keys_lit),*]));
                 };
@@ -99,32 +81,32 @@ fn impl_from_kv(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
         }
     }
 
-    let from_kv_stack = quote!{
+    let from_kv_stack = quote! {
 
-        while let Some(sv_res) = ctx.st_try_fetch::<String>(*offset) {
-//            println!("Offset {} = [{:?}]", offset, sv_res);
-            match sv_res {
-                Ok(key) => {
-                    match &*key {
-                        #(#matchparts,)*
-                        &_ => {
-                            // TODO: Warn for unknown key.
+            while let Some(sv_res) = ctx.st_try_fetch::<String>(*offset) {
+    //            println!("Offset {} = [{:?}]", offset, sv_res);
+                match sv_res {
+                    Ok(key) => {
+                        match &*key {
+                            #(#matchparts,)*
+                            &_ => {
+                                // TODO: Warn for unknown key.
+                            }
                         }
+                    },
+                    Err(e) => {
+                        errors.push(
+                            _perlxs::error::ToStructErrPart::KeyParseFail{
+                                offset: *offset,
+                                ty: "String",
+                                error: e.to_string()
+                            });
                     }
-                },
-                Err(e) => {
-                    errors.push(
-                        _perlxs::error::ToStructErrPart::KeyParseFail{
-                            offset: *offset,
-                            ty: "String",
-                            error: e.to_string()
-                        });
                 }
-            }
-            *offset += 2;
-        };
+                *offset += 2;
+            };
 
-    };
+        };
 
     // TODO check to see if we can use $crate here or not
     let impl_block = quote! {
@@ -153,13 +135,15 @@ fn impl_from_kv(ast: &syn::DeriveInput) -> proc_macro2::TokenStream {
         }
     };
 
-    let dummy_const = Ident::new(&format!("_IMPL_PERLXS_FROMPERLKV_FOR_{}", ident),proc_macro2::Span::call_site());
+    let dummy_const = syn::Ident::new(&format!("_IMPL_PERLXS_FROMPERLKV_FOR_{}", ident), proc_macro2::Span::call_site());
 
-    quote! {
+    let output = quote! {
         #[allow(non_upper_case_globals)]
         const #dummy_const: () = {
             extern crate perl_xs as _perlxs;
             #impl_block
         };
-    }
+    };
+
+    Ok(output)
 }

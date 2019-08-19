@@ -1,5 +1,5 @@
 use crate::error::Errors;
-use proc_macro2::{TokenStream,Span};
+use proc_macro2::{Span, TokenStream};
 use quote::quote;
 
 pub fn expand(input: TokenStream) -> Result<TokenStream, Errors> {
@@ -7,7 +7,7 @@ pub fn expand(input: TokenStream) -> Result<TokenStream, Errors> {
 
     let package_name = match item {
         syn::Lit::Str(s) => s,
-        _ => panic!("package macro requires string argument")
+        _ => panic!("package macro requires string argument"),
     };
 
     let package_name_clean = package_name.value().replace("::", "__");

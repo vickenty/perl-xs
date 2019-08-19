@@ -14,11 +14,7 @@ impl Errors {
     }
 
     pub fn error<T: Display>(&self, msg: T) {
-        self.errors
-            .borrow_mut()
-            .as_mut()
-            .unwrap()
-            .push(msg.to_string());
+        self.errors.borrow_mut().as_mut().unwrap().push(msg.to_string());
     }
 
     pub fn check(self) -> Result<(), String> {
@@ -38,14 +34,11 @@ impl Errors {
     }
 }
 
-
-
 impl std::convert::From<syn::Error> for Errors {
-    fn from (err: syn::Error) -> Errors{
+    fn from(err: syn::Error) -> Errors {
         Errors {
             errors: RefCell::new(Some(vec![format!("{}", err)])),
         }
-
     }
 }
 

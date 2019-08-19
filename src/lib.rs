@@ -57,8 +57,7 @@ mod scalar;
 #[doc(hidden)]
 pub mod croak;
 
-pub use perl_xs_macro_derive::DeriveTryFromContext;
-pub use perl_xs_macro_function::*;
+pub use perl_xs_macro::*;
 
 pub use crate::array::AV;
 pub use crate::context::Context;

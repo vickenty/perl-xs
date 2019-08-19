@@ -1,4 +1,3 @@
-
 use crate::error::Errors;
 
 #[derive(Debug)]
@@ -24,7 +23,7 @@ impl Field {
             for meta_item in meta_items {
                 match meta_item {
                     // Parse `#[perlxs(key = "-foo")]`
-                    syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue{ref ident, ref lit, ..})) if ident == "key" => {
+                    syn::NestedMeta::Meta(syn::Meta::NameValue(syn::MetaNameValue { ref ident, ref lit, .. })) if ident == "key" => {
                         if let Ok(s) = get_string_from_lit(errors, &ident.to_string(), &ident.to_string(), lit) {
                             keys.push(s);
                         }
@@ -65,13 +64,13 @@ impl Field {
 
 pub fn get_meta_items(attr: &syn::Attribute) -> Option<Vec<syn::NestedMeta>> {
     match attr.parse_meta() {
-        Ok(syn::Meta::List(syn::MetaList{ref ident, ref nested, .. })) if ident == "perlxs" => Some(nested.iter().cloned().collect()),
+        Ok(syn::Meta::List(syn::MetaList { ref ident, ref nested, .. })) if ident == "perlxs" => Some(nested.iter().cloned().collect()),
         _ => None,
     }
 }
 
 fn get_string_from_lit(errors: &Errors, attr_name: &str, meta_item_name: &str, lit: &syn::Lit) -> Result<String, ()> {
-    if let syn::Lit::Str(litstr @ syn::LitStr{..}) = lit {
+    if let syn::Lit::Str(litstr @ syn::LitStr { .. }) = lit {
         Ok(litstr.value())
     } else {
         errors.error(format!(

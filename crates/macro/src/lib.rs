@@ -1,7 +1,5 @@
 #![recursion_limit = "256"]
 extern crate proc_macro;
-
-#[macro_use]
 extern crate quote;
 extern crate syn;
 

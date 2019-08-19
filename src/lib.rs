@@ -1,4 +1,3 @@
-#![feature(concat_idents)]
 #![deny(missing_docs)]
 
 //! Perl XS API for Rust.

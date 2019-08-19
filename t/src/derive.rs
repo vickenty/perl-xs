@@ -61,16 +61,6 @@ fn test_from_kv_debug(ctx: &mut Context) -> String {
     }
 }
 
-//pub const PERL_XS:
-//&'static [(&'static str, ::perl_xs::raw::XSUBADDR_t)] =
-//    &[("XSTest::Derive::test_from_kv", _xs_test_from_kv as ::perl_xs::raw::XSUBADDR_t),
-//    ("XSTest::Derive::test_from_kv_dual_arg_unpack", _xs_test_from_kv_dual_arg_unpack as ::perl_xs::raw::XSUBADDR_t),
-//    ("XSTest::Derive::test_from_kv_bool", _xs_test_from_kv_bool as ::perl_xs::raw::XSUBADDR_t),
-//    ("XSTest::Derive::test_from_kv_error", _xs_test_from_kv_error as ::perl_xs::raw::XSUBADDR_t),
-//    ("XSTest::Derive::test_from_kv_error_display", _xs_test_from_kv_error_display as ::perl_xs::raw::XSUBADDR_t),
-//    ("XSTest::Derive::test_from_kv_debug", _xs_test_from_kv_debug as ::perl_xs::raw::XSUBADDR_t),
-//    ];
-
 #[derive(DeriveTryFromContext, Debug)]
 struct TestStruct {
     alpha: bool,

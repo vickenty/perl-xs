@@ -1,5 +1,5 @@
 use crate::error::Errors;
-use proc_macro2::{Span, TokenStream};
+use proc_macro2::TokenStream;
 use quote::quote;
 
 // Takes the parsed input from a `#[perlxs]` macro and returns the generated bindings

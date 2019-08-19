@@ -1,17 +1,26 @@
 use perl_xs::{AV, IV};
 
-xs! {
-    package XSTest::Param;
+package!("XSTest::Param");
 
-    sub add(ctx, a: IV, b: IV) {
-        a + b
-    }
+#[perlxs]
+fn add(a: IV, b: IV) -> IV {
+    a + b
+}
 
-    sub len(ctx, a: AV) {
-        a.top_index() + 1
+#[perlxs]
+fn add_opt(a: IV, b: Option<IV>) -> IV {
+    match b {
+        Some(b) => a + b,
+        None => a,
     }
+}
 
-    sub strlen(ctx, s: String) {
-        s.chars().count() as IV
-    }
+#[perlxs]
+fn len(a: AV) -> IV {
+    a.top_index() + 1
+}
+
+#[perlxs]
+fn strlen(s: String) -> IV {
+    s.chars().count() as IV
 }

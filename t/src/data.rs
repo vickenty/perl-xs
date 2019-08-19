@@ -1,18 +1,19 @@
-use perl_xs::{DataRef, IV};
+use perl_xs::{Context, DataRef, IV, SV};
 use std::cell::RefCell;
 
-xs! {
-    package XSTest::Data;
+package!("XSTest::Data");
 
-    sub new(ctx, class: String, initial: IV) {
-        ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
-    }
+#[perlxs]
+fn new(class: String, initial: IV, ctx: &mut Context) -> SV {
+    ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
+}
 
-    sub get(_ctx, this: DataRef<RefCell<IV>>) {
-        return *this.borrow();
-    }
+#[perlxs]
+fn get(this: DataRef<RefCell<IV>>) -> i64 {
+    *this.borrow()
+}
 
-    sub inc(_ctx, this: DataRef<RefCell<IV>>) {
-        *this.borrow_mut() += 1;
-    }
+#[perlxs]
+fn inc(this: DataRef<RefCell<IV>>) {
+    *this.borrow_mut() += 1;
 }

@@ -6,11 +6,11 @@ use Test::LeakTrace;
 
 require_ok("XSTest");
 
-is_deeply [ XSTest::test_push() ], [ -1, 42, 42 ** 0.5, "Don't panic!", 1, "" ], "scalars ok";
+is_deeply [ XSTest::Stack::test_push() ], [ -1, 42, 42 ** 0.5, "Don't panic!", 1, "" ], "scalars ok";
 
-no_leaks_ok { XSTest::test_push() };
+no_leaks_ok { XSTest::Stack::test_push() };
 
-my $strings = [ XSTest::test_push_unicode() ];
+my $strings = [ XSTest::Stack::test_push_unicode() ];
 is_deeply $strings, [
     "Don't panic!",
     "Не паникуйте!",
@@ -22,4 +22,4 @@ is_deeply $strings, [
 ok utf8::is_utf8($strings->[$_]), "string $_ is utf8"
     for (0..$#$strings);
 
-no_leaks_ok { XSTest::test_push_unicode() };
+no_leaks_ok { XSTest::Stack::test_push_unicode() };

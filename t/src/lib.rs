@@ -7,18 +7,6 @@ extern crate perl_sys;
 
 package!("XSTest");
 
-//xs! {
-//    bootstrap boot_XSTest;
-//    use stack;
-//    use scalar;
-//    use array;
-//    use hash;
-//    use panic;
-//    use param;
-//    use data;
-//    use derive;
-//}
-
 mod array;
 mod data;
 mod derive;

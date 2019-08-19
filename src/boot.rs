@@ -8,13 +8,12 @@ pub fn boot(ctx: &mut Context, _package: &'static str) {
     }
 
     for symbol in crate::SYMBOL_REGISTRY.iter() {
-        println!("BOOT - FOUND {:?}", symbol);
 
         let mut symbol_name: String;
 
         if let Some(package) = symbol.package {
             symbol_name = package.to_string().replace(" :: ", "::");
-        //  Hack ^^ - deprecated macro seems to be adding spaces
+        //  Hack ^^ - deprecated xs! macro seems to be adding spaces
         } else {
             symbol_name = symbol.module.to_string();
 
@@ -46,8 +45,6 @@ pub fn boot(ctx: &mut Context, _package: &'static str) {
         symbol_name.push_str("::");
         symbol_name.push_str(symbol.name);
 
-        println!("SYMBOL NAME: {}", symbol_name);
-        //
         let cname = ::std::ffi::CString::new(symbol_name).unwrap();
         ctx.new_xs(&cname, symbol.ptr);
     }

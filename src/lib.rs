@@ -14,15 +14,13 @@ mod registry;
 #[doc(hidden)]
 pub mod boot;
 
-type Subptr = extern "C" fn(pthx: *mut ::perl_sys::types::PerlInterpreter, cv: *mut crate::raw::CV);
-
 #[doc(hidden)]
 #[derive(Debug)]
 pub struct Symbol {
     pub module: &'static str,
     pub package: Option<&'static str>,
     pub name: &'static str,
-    pub ptr: Subptr,
+    pub ptr: crate::raw::XSUBADDR_t,
 }
 
 #[doc(hidden)]

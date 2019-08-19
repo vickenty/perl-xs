@@ -68,16 +68,18 @@ pub fn expand(_attr: TokenStream, input: TokenStream) -> Result<TokenStream, Err
     let dummy_const = syn::Ident::new(&format!("_IMPL_PERLXS_FOR_{}", rust_fn_name), proc_macro2::Span::call_site());
 
     let bind_fn = quote! {
-        extern "C" fn #xs_name (pthx: *mut ::perl_sys::types::PerlInterpreter, _cv: *mut ::perl_xs::raw::CV) {
+        pthx! {
+            #[allow(unused_mut)]
+            fn #xs_name (pthx, _cv: *mut ::perl_xs::raw::CV) {
+                let perl = ::perl_xs::raw::initialize(pthx);
+                ::perl_xs::context::Context::wrap(perl,|mut _xs_ctx| {
 
-            let perl = ::perl_xs::raw::initialize(pthx);
-            ::perl_xs::context::Context::wrap(perl,|mut _xs_ctx| {
+                    let mut offset : isize = 0;
+                    #(#rust_arg_unpacks;)*
+                    #rust_fn_ident(#(#rust_args,)*)
+                });
 
-                let mut offset : isize = 0;
-                #(#rust_arg_unpacks;)*
-                #rust_fn_ident(#(#rust_args,)*)
-            });
-
+            }
         }
     };
 

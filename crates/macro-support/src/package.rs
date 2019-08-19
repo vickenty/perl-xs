@@ -23,18 +23,19 @@ pub fn expand(input: TokenStream) -> Result<TokenStream, Errors> {
         };
 
         /// Register a boot function for each package, which allows flexibility for how the library might be loaded
-        #[no_mangle]
-        #[allow(non_snake_case)]
-        extern "C" fn #boot_fn_name (pthx: *mut ::perl_sys::types::PerlInterpreter, _cv: *mut ::perl_xs::raw::CV) {
-            let perl = perl_xs::raw::initialize(pthx);
-            perl_xs::context::Context::wrap(perl, |ctx| {
+        pthx! {
+            #[no_mangle]
+            #[allow(non_snake_case)]
+            fn #boot_fn_name (pthx, _cv: *mut ::perl_xs::raw::CV) {
+                let perl = perl_xs::raw::initialize(pthx);
+                perl_xs::context::Context::wrap(perl, |ctx| {
 
-            ::perl_xs::boot::boot(ctx, #package_name);
+                ::perl_xs::boot::boot(ctx, #package_name);
 
-            1 as perl_xs::raw::IV
-            });
+                1 as perl_xs::raw::IV
+                });
+            }
         }
     };
-
     Ok(output)
 }

@@ -179,23 +179,24 @@ impl Context {
     /// `DataRef<T>`.
     ///
     /// ```
-    /// # #[macro_use] extern crate perl_xs;
-    /// # #[macro_use] extern crate perl_sys;
-    /// # use std::cell::RefCell;
-    /// # use perl_xs::{IV, DataRef};
-    /// xs! {
-    ///   package Counter;
-    ///   sub new(ctx, class: String, initial: IV) {
-    ///     ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
-    ///   }
-    ///   sub get(_ctx, this: DataRef<RefCell<IV>>) {
-    ///     return *this.borrow();
-    ///   }
-    ///   sub inc(_ctx, this: DataRef<RefCell<IV>>, amount: Option<IV>) {
-    ///     *this.borrow_mut() += amount.unwrap_or(1);
-    ///   }
+    /// #[macro_use] extern crate perl_xs;
+    /// #[macro_use] extern crate perl_sys;
+    /// use std::cell::RefCell;
+    /// use perl_xs::{SV, IV, DataRef,Context};
+    /// package!("Counter");
+    /// #[perlxs]
+    /// fn new(class: String, initial: i64, ctx: &mut Context) -> SV {
+    ///   ctx.new_sv_with_data(RefCell::new(initial)).bless(&class)
     /// }
-    /// # fn main() {}
+    /// #[perlxs]
+    /// fn get(this: DataRef<RefCell<IV>>) -> i64 {
+    ///   return *this.borrow();
+    /// }
+    /// #[perlxs]
+    /// fn inc(this: DataRef<RefCell<IV>>, amount: Option<IV>) {
+    ///   *this.borrow_mut() += amount.unwrap_or(1);
+    /// }
+    /// fn main() {}
     /// ```
     #[inline]
     pub fn new_sv_with_data<T: 'static>(&mut self, value: T) -> SV {

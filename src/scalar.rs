@@ -359,6 +359,7 @@ impl FromSV for SV {
     }
 }
 
+// Conflicting implementation
 //macro_rules! from_sv_for_option {
 //    ($($fn:ident, $ty:ty;)*) => ($(
 //        /// Return `Some(v)` if scalar value is defined, `None` otherwise.

@@ -266,7 +266,7 @@ impl SV {
     /// This relies on [Perl magic](http://perldoc.perl.org/perlguts.html#Magic-Virtual-Tables) to
     /// store the value. Magic is not copied on scalar assignment, so to be useful, scalars with
     /// magic need to be passed around by reference.
-    pub fn add_data(&self, value: Box<Any>) {
+    pub fn add_data(&self, value: Box<dyn Any>) {
         let pthx = self.pthx();
         let svp = self.as_ptr();
         let obj = ptr::null_mut();
@@ -283,12 +283,12 @@ impl SV {
     /// alive.
     ///
     /// `None` is returned if no value was found in the SV.
-    pub fn into_data_ref(self) -> Option<DataRef<Any>> {
+    pub fn into_data_ref(self) -> Option<DataRef<dyn Any>> {
         let pthx = self.pthx();
         unsafe {
             let magic = pthx.mg_findext(self.as_ptr(), raw::PERL_MAGIC_ext as _, &VTBL_ANY);
             if !magic.is_null() {
-                let ptr = (*magic).mg_ptr as *const Box<Any>;
+                let ptr = (*magic).mg_ptr as *const Box<dyn Any>;
                 Some(DataRef {
                     owner: self,
                     inner: (*ptr).as_ref(),
@@ -479,7 +479,7 @@ impl<'a> IntoSV for &'a SV {
 pthx! {
     fn magic_free_any(_pthx, _sv: *mut raw::SV, magic: *mut raw::MAGIC) -> c_int {
         unsafe {
-            let ptr = (*magic).mg_ptr as *mut Box<Any>;
+            let ptr = (*magic).mg_ptr as *mut Box<dyn Any>;
             assert!(!ptr.is_null());
             drop(Box::from_raw(ptr));
         }
@@ -492,7 +492,7 @@ static VTBL_ANY: raw::MGVTBL = raw::MGVTBL {
     ..raw::EMPTY_MGVTBL
 };
 
-impl IntoSV for Box<Any> {
+impl IntoSV for Box<dyn Any> {
     fn into_sv(self, pthx: raw::Interpreter) -> SV {
         let sv = unsafe { SV::from_raw_owned(pthx, pthx.newSV(0)) };
         sv.add_data(self);
@@ -543,7 +543,7 @@ pub struct DataRef<T: ?Sized> {
     owner: SV,
 }
 
-impl DataRef<Any> {
+impl DataRef<dyn Any> {
     /// Attempt to downcast the ref to the concrete type while preserving owning SV.
     pub fn downcast<T: 'static>(self) -> Option<DataRef<T>> {
         let DataRef { inner, owner } = self;
@@ -566,7 +566,7 @@ impl<T: ?Sized> Deref for DataRef<T> {
     }
 }
 
-impl TryFromSV for DataRef<Any> {
+impl TryFromSV for DataRef<dyn Any> {
     type Error = &'static str;
 
     unsafe fn try_from_sv(pthx: raw::Interpreter, sv: *mut raw::SV) -> Result<Self, Self::Error> {
@@ -580,7 +580,7 @@ impl<T: 'static> TryFromSV for DataRef<T> {
     type Error = &'static str;
 
     unsafe fn try_from_sv(pthx: raw::Interpreter, svp: *mut raw::SV) -> Result<Self, Self::Error> {
-        DataRef::<Any>::try_from_sv(pthx, svp)?
+        DataRef::<dyn Any>::try_from_sv(pthx, svp)?
             .downcast()
             .ok_or("invalid value")
     }

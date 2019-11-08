@@ -198,7 +198,7 @@ impl Context {
     /// ```
     #[inline]
     pub fn new_sv_with_data<T: 'static>(&mut self, value: T) -> SV {
-        self.new_sv(Box::new(value) as Box<std::any::Any>)
+        self.new_sv(Box::new(value) as Box<dyn std::any::Any>)
     }
 
     /// Return an undefined SV.

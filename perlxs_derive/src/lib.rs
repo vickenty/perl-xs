@@ -1,4 +1,3 @@
-extern crate perl_xs;
 extern crate proc_macro;
 #[macro_use]
 extern crate quote;
